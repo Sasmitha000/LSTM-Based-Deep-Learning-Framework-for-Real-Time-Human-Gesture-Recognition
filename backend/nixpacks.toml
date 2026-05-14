@@ -1,2 +1,5 @@
 [phases.setup]
-nixPkgs = ["libGL", "libglib", "mesa"]
+nixPkgs = ["libGL", "libglib", "mesa", "zlib"]
+
+[phases.install]
+cmds = ["pip install --upgrade pip", "pip install -r requirements.txt"]
