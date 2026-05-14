@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Dashboard - SignBridge</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .user-container { max-width: 800px; margin: 0 auto; padding: 40px 20px; }
+        .welcome-card { background: linear-gradient(135deg, #1a1a2e, #0f3460); border: 1px solid #2a2a2a; border-radius: 16px; padding: 30px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .welcome-card h1 { font-size: 1.5rem; margin: 0 0 5px; }
+        .welcome-card p { color: #888; margin: 0; font-size: 0.9rem; }
+        .info-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 25px; margin-bottom: 20px; }
+        .info-card h2 { font-size: 1rem; color: #888; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 20px; }
+        .api-key-box { background: #0f0f0f; border: 1px solid #2a2a2a; border-radius: 8px; padding: 16px; font-family: monospace; font-size: 0.9rem; color: var(--accent); word-break: break-all; cursor: pointer; transition: border-color 0.3s; margin-bottom: 10px; }
+        .api-key-box:hover { border-color: var(--accent); }
+        .copy-hint { font-size: 0.78rem; color: #555; margin-bottom: 15px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-item { background: #2a2a2a; border-radius: 8px; padding: 15px; text-align: center; }
+        .stat-value { font-size: 1.8rem; font-weight: 800; color: var(--accent); }
+        .stat-label { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; }
+        .code-example { background: #0f0f0f; border: 1px solid #2a2a2a; border-radius: 8px; padding: 16px; font-family: monospace; font-size: 0.82rem; color: #ccc; overflow-x: auto; white-space: pre; margin-bottom: 15px; }
+        .danger-zone { border-color: #3a1a1a; }
+        .danger-zone h2 { color: #ff4444; }
+        .logout-btn { background: transparent; border: 1px solid #444; color: #888; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; transition: all 0.3s; }
+        .logout-btn:hover { border-color: #ff4444; color: #ff4444; }
+        .regen-btn { background: transparent; border: 1px solid #ff4444; color: #ff4444; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; transition: all 0.3s; }
+        .regen-btn:hover { background: rgba(255,68,68,0.1); }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html" class="logo">✋ SignBridge</a>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="detection.html">Live Detection</a></li>
+            <li><a href="learning.html">Learn Signs</a></li>
+            <li><a href="api-docs.html">API Docs</a></li>
+        </ul>
+        <button id="themeToggle" onclick="toggleTheme()" style="background:var(--bg-tertiary);border:1px solid var(--border-color);color:var(--text-secondary);padding:6px 14px;border-radius:20px;cursor:pointer;font-size:0.85rem;transition:all 0.3s;">🌙 Dark</button>
+    </nav>
+
+    <div class="user-container">
+        <!-- Welcome -->
+        <div class="welcome-card">
+            <div>
+                <h1>Welcome back, <span style="color:var(--accent);" id="userName">...</span>!</h1>
+                <p id="userEmail">Loading...</p>
+            </div>
+            <button onclick="logout()" class="logout-btn">Logout</button>
+        </div>
+
+        <!-- Stats -->
+        <div class="info-card">
+            <h2>📊 API Usage</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value" id="usageCount">0</div>
+                    <div class="stat-label">API Calls</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="memberSince">-</div>
+                    <div class="stat-label">Member Since</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="lastUsed">-</div>
+                    <div class="stat-label">Last Used</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" style="color:var(--accent);">Free</div>
+                    <div class="stat-label">Plan</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Key -->
+        <div class="info-card">
+            <h2>🔑 Your API Key</h2>
+            <div class="api-key-box" id="apiKeyDisplay" onclick="copyKey()">
+                Loading...
+            </div>
+            <p class="copy-hint">Click to copy to clipboard</p>
+
+            <p style="color:#888;font-size:0.9rem;margin-bottom:10px;">Use in your requests:</p>
+            <div class="code-example" id="codeExample">Loading...</div>
+
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <a href="api-docs.html" class="btn btn-primary">View API Docs</a>
+                <button onclick="copyKey()" class="btn btn-secondary">Copy Key</button>
+            </div>
+        </div>
+
+        <!-- Code Examples -->
+        <div class="info-card">
+            <h2>💻 Quick Start Examples</h2>
+            <p style="color:#888;font-size:0.85rem;margin-bottom:15px;">Translate a detected gesture:</p>
+            <div class="code-example" id="translateExample">Loading...</div>
+
+            <p style="color:#888;font-size:0.85rem;margin-bottom:15px;">Check API health:</p>
+            <div class="code-example" id="healthExample">Loading...</div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="info-card danger-zone">
+            <h2>⚠️ Danger Zone</h2>
+            <p style="color:#888;font-size:0.9rem;margin-bottom:15px;">Regenerating your API key will invalidate your current key immediately. Any applications using the old key will stop working.</p>
+            <button onclick="regenerateKey()" class="regen-btn">🔄 Regenerate API Key</button>
+        </div>
+    </div>
+
+    <footer>
+        <p>SignBridge — PUSL3190 Final Year Project | Kannangara K Kannangara | Plymouth University</p>
+        <p style="margin-top:8px;font-size:0.8rem;">
+            <a href="api-docs.html" style="color:var(--accent);">API Documentation</a> &nbsp;·&nbsp;
+            <a href="privacy.html" style="color:#888;">Privacy Policy</a> &nbsp;·&nbsp;
+            <a href="get-api-key.html" style="color:#888;">Get API Key</a>
+        </p>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+    const BACKEND_URL = 'http://localhost:5001';
+    let currentApiKey = '';
+
+    async function loadUserData() {
+        const token = localStorage.getItem('sb_session');
+        if (!token) {
+            window.location.href = 'get-api-key.html';
+            return;
+        }
+
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/auth/me`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+
+            if (data.error) {
+                localStorage.removeItem('sb_session');
+                window.location.href = 'get-api-key.html';
+                return;
+            }
+
+            document.getElementById('userName').textContent = data.name;
+            document.getElementById('userEmail').textContent = data.email;
+
+            const memberDate = new Date(data.created_at);
+            document.getElementById('memberSince').textContent =
+                memberDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+
+            if (data.api_key) {
+                currentApiKey = data.api_key.api_key;
+                document.getElementById('usageCount').textContent = data.api_key.usage_count || 0;
+                document.getElementById('apiKeyDisplay').textContent = currentApiKey;
+
+                const lastUsed = data.api_key.last_used;
+                document.getElementById('lastUsed').textContent = lastUsed ?
+                    new Date(lastUsed).toLocaleDateString() : 'Never';
+
+                updateCodeExamples(currentApiKey);
+            }
+        } catch(e) {
+            console.log('Error loading user data:', e);
+        }
+    }
+
+    function updateCodeExamples(key) {
+        document.getElementById('codeExample').textContent =
+`fetch('${BACKEND_URL}/api/translate', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ${key}'
+  },
+  body: JSON.stringify({
+    text: 'thanks',
+    target_language: 'es'
+  })
+});`;
+
+        document.getElementById('translateExample').textContent =
+`// Translate gesture to Spanish
+const response = await fetch('${BACKEND_URL}/api/translate', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer ${key}',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({ text: 'i love you', target_language: 'fr' })
+});
+const data = await response.json();
+console.log(data.translated); // "Je t'aime"`;
+
+        document.getElementById('healthExample').textContent =
+`// Check API status
+const res = await fetch('${BACKEND_URL}/api/health', {
+  headers: { 'Authorization': 'Bearer ${key}' }
+});
+const data = await res.json();
+console.log(data.status); // "healthy"`;
+    }
+
+    function copyKey() {
+        if (!currentApiKey) return;
+        navigator.clipboard.writeText(currentApiKey).then(() => {
+            const display = document.getElementById('apiKeyDisplay');
+            const original = display.textContent;
+            display.textContent = '✅ Copied to clipboard!';
+            setTimeout(() => { display.textContent = original; }, 2000);
+        });
+    }
+
+    async function regenerateKey() {
+        if (!confirm('Are you sure? Your current API key will be invalidated immediately.')) return;
+
+        const token = localStorage.getItem('sb_session');
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/auth/regenerate-key`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (data.success) {
+                currentApiKey = data.api_key;
+                document.getElementById('apiKeyDisplay').textContent = currentApiKey;
+                updateCodeExamples(currentApiKey);
+                alert('✅ New API key generated successfully!');
+            }
+        } catch(e) {
+            alert('Failed to regenerate key. Please try again.');
+        }
+    }
+
+    async function logout() {
+        const token = localStorage.getItem('sb_session');
+        try {
+            await fetch(`${BACKEND_URL}/api/auth/logout`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+        } catch(e) {}
+        localStorage.removeItem('sb_session');
+        localStorage.removeItem('sb_user');
+        window.location.href = 'get-api-key.html';
+    }
+
+    loadUserData();
+    </script>
+<script>
+function toggleTheme() {
+    const body = document.body;
+    const btn = document.getElementById('themeToggle');
+    if (body.classList.contains('light-mode')) {
+        body.classList.remove('light-mode');
+        localStorage.setItem('theme', 'dark');
+        if (btn) btn.textContent = '🌙 Dark';
+    } else {
+        body.classList.add('light-mode');
+        localStorage.setItem('theme', 'light');
+        if (btn) btn.textContent = '☀️ Light';
+    }
+}
+(function() {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'light') {
+        document.body.classList.add('light-mode');
+        const btn = document.getElementById('themeToggle');
+        if (btn) btn.textContent = '☀️ Light';
+    }
+})();
+</script>
+</body>
+</html>

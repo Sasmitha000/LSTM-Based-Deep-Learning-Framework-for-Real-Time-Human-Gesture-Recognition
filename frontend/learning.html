@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#00ff88">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learn Signs - SignBridge</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .tab-container { display: flex; gap: 10px; margin-bottom: 30px; }
+        .tab-btn { padding: 10px 25px; border-radius: 50px; font-size: 0.9rem; font-weight: 600; cursor: pointer; border: 2px solid var(--accent); color: var(--accent); background: transparent; transition: all 0.3s; }
+        .tab-btn.active { background: var(--accent); color: #0f0f0f; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .gesture-card { background-color: #1a1a1a; border-radius: 16px; border: 1px solid #2a2a2a; overflow: hidden; transition: transform 0.3s, border-color 0.3s; }
+        .gesture-card:hover { transform: translateY(-5px); border-color: var(--accent); }
+        .gesture-visual { height: 180px; background: linear-gradient(135deg, #1a1a2e, #0f3460); display: flex; align-items: center; justify-content: center; font-size: 5rem; }
+        .gesture-info { padding: 20px; }
+        .gesture-info h3 { font-size: 1.3rem; margin-bottom: 10px; color: var(--accent); text-transform: capitalize; }
+        .gesture-info p { color: #888888; font-size: 0.9rem; line-height: 1.6; margin-bottom: 15px; }
+        .gesture-steps { list-style: none; display: flex; flex-direction: column; gap: 8px; counter-reset: step; }
+        .gesture-steps li { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: #aaaaaa; }
+        .gesture-steps li::before { content: counter(step); counter-increment: step; background-color: var(--accent); color: #0f0f0f; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+        .tips-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+        .tip-card { background: #1a1a1a; border-radius: 12px; padding: 20px; border: 1px solid #2a2a2a; }
+        .tip-card h4 { color: var(--accent); margin-bottom: 8px; font-size: 0.95rem; }
+        .tip-card p { color: #888888; font-size: 0.85rem; line-height: 1.6; margin: 0; }
+
+        /* Text to Sign */
+        .t2s-container { background: #1a1a1a; border-radius: 16px; border: 1px solid #2a2a2a; padding: 30px; margin-bottom: 30px; }
+        .t2s-input-row { display: flex; gap: 10px; margin-bottom: 20px; }
+        .t2s-input { flex: 1; padding: 12px 16px; background: #2a2a2a; border: 1px solid #444; border-radius: 8px; color: #fff; font-size: 1rem; }
+        .t2s-input:focus { outline: none; border-color: var(--accent); }
+        .t2s-result { text-align: center; padding: 30px; }
+        .t2s-emoji { font-size: 8rem; margin-bottom: 15px; display: block; animation: bounceIn 0.5s ease; }
+        .t2s-name { font-size: 1.5rem; color: var(--accent); font-weight: 700; margin-bottom: 10px; }
+        .t2s-description { color: #888; font-size: 0.9rem; line-height: 1.6; max-width: 400px; margin: 0 auto; }
+        .t2s-not-found { color: #666; font-style: italic; }
+        @keyframes bounceIn { 0% { transform: scale(0.5); opacity: 0; } 70% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 1; } }
+
+        /* Practice Section */
+        .practice-container { background: #1a1a1a; border-radius: 16px; border: 1px solid #2a2a2a; padding: 30px; }
+        .practice-gesture-select { display: flex; gap: 15px; margin-bottom: 25px; flex-wrap: wrap; }
+        .gesture-select-btn { padding: 10px 25px; border-radius: 50px; font-size: 0.9rem; font-weight: 600; cursor: pointer; border: 2px solid #2a2a2a; color: #888; background: transparent; transition: all 0.3s; }
+        .gesture-select-btn.selected { border-color: var(--accent); color: var(--accent); }
+        .practice-wrapper { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
+        .practice-video-section { flex: 1; min-width: 280px; }
+        .practice-video-wrapper { position: relative; }
+        #practiceVideo { width: 100%; border-radius: 12px; border: 2px solid #2a2a2a; background: #0f0f0f; transform: scaleX(-1); display: block; }
+        #practiceCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 12px; pointer-events: none; }
+        .practice-feedback { flex: 1; min-width: 250px; }
+        .feedback-card { background: #2a2a2a; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 15px; }
+        .feedback-icon { font-size: 3rem; margin-bottom: 10px; }
+        .feedback-text { font-size: 1.1rem; font-weight: 600; color: #fff; margin-bottom: 5px; }
+        .feedback-sub { font-size: 0.85rem; color: #888; }
+        .target-sign { background: linear-gradient(135deg, #1a1a2e, #0f3460); border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 15px; }
+        .target-sign p { color: #888; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+        .target-sign .sign-emoji { font-size: 4rem; display: block; margin-bottom: 8px; }
+        .target-sign .sign-name { font-size: 1.2rem; color: var(--accent); font-weight: 700; }
+        .practice-score { display: flex; gap: 10px; }
+        .score-chip { flex: 1; background: #2a2a2a; border-radius: 8px; padding: 12px; text-align: center; }
+        .score-chip .score-value { font-size: 1.5rem; font-weight: 800; color: var(--accent); }
+        .score-chip .score-label { font-size: 0.75rem; color: #888; text-transform: uppercase; }
+        .practice-controls { display: flex; gap: 10px; margin-top: 15px; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html" class="logo">✋ SignBridge</a>
+        <ul>
+            <li><a href="index.html" data-i18n="home">Home</a></li>
+            <li><a href="detection.html" data-i18n="liveDetection">Live Detection</a></li>
+            <li><a href="learning.html" class="active" data-i18n="learnSigns">Learn Signs</a></li>
+        </ul>
+        <select id="uiLangSelector" onchange="applyTranslations(this.value)" style="background:var(--bg-tertiary);border:1px solid var(--border-color);color:var(--text-secondary);padding:6px 10px;border-radius:20px;cursor:pointer;font-size:0.82rem;">
+            <option value="en">🇺🇸 EN</option>
+            <option value="es">🇪🇸 ES</option>
+            <option value="fr">🇫🇷 FR</option>
+            <option value="ar">🇸🇦 AR</option>
+            <option value="hi">🇮🇳 HI</option>
+            <option value="ja">🇯🇵 JA</option>
+        </select>
+        <button id="themeToggle" onclick="toggleTheme()" style="background:var(--bg-tertiary);border:1px solid var(--border-color);color:var(--text-secondary);padding:6px 14px;border-radius:20px;cursor:pointer;font-size:0.85rem;transition:all 0.3s;">🌙 Dark</button>
+    </nav>
+
+    <div class="learning-container">
+        <h1><span data-i18n="learningTitle">Learn</span> <span data-i18n="learningSpan">Sign Language</span></h1>
+        <p class="subtitle" data-i18n="learningSubtitle">Master ASL gestures with interactive guides, text-to-sign lookup, and real-time practice feedback.</p>
+
+        <!-- Tabs -->
+        <div class="tab-container">
+            <button class="tab-btn active" onclick="switchTab('guides')" data-i18n="signGuides">📖 Sign Guides</button>
+            <button class="tab-btn" onclick="switchTab('t2s')" data-i18n="textToSign">⌨️ Text to Sign</button>
+            <button class="tab-btn" onclick="switchTab('practice')" data-i18n="practiceMode">🎯 Practice Mode</button>
+        </div>
+
+        <!-- Tab 1: Sign Guides -->
+        <div id="tab-guides" class="tab-content active">
+            <div class="gestures-grid">
+                <div class="gesture-card">
+                    <div class="gesture-visual">🙏</div>
+                    <div class="gesture-info">
+                        <h3 data-i18n="gestureThanksTitle">Thanks</h3>
+                        <p><span data-i18n="gestureThanksDesc">The "Thanks" sign is performed by bringing your dominant hand to your chin and moving it forward and slightly downward in a graceful motion.</span></p>
+                        <ol class="gesture-steps">
+                            <li data-i18n="thanksStep1">Hold your dominant hand flat with fingers together</li>
+                            <li data-i18n="thanksStep2">Touch your fingertips to your chin</li>
+                            <li data-i18n="thanksStep3">Move your hand forward and slightly down</li>
+                            <li data-i18n="thanksStep4">Keep your palm facing inward throughout</li>
+                            <li data-i18n="thanksStep5">Perform the motion smoothly and naturally</li>
+                        </ol>
+                    </div>
+                </div>
+                <div class="gesture-card">
+                    <div class="gesture-visual">🤟</div>
+                    <div class="gesture-info">
+                        <h3 data-i18n="gestureILYTitle">I Love You</h3>
+                        <p><span data-i18n="gestureILYDesc">The "I Love You" sign combines the letters I, L, and Y into a single handshape. Extend your thumb, index finger, and pinky while curling your middle and ring fingers down.</span></p>
+                        <ol class="gesture-steps">
+                            <li data-i18n="ilyStep1">Start with your hand in a fist</li>
+                            <li data-i18n="ilyStep2">Extend your thumb outward</li>
+                            <li data-i18n="ilyStep3">Extend your index finger upward</li>
+                            <li data-i18n="ilyStep4">Extend your pinky finger outward</li>
+                            <li data-i18n="ilyStep5">Keep middle and ring fingers curled down</li>
+                            <li data-i18n="ilyStep6">Hold the position facing the camera</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top:40px;background:#1a1a1a;border-radius:16px;padding:30px;border:1px solid #2a2a2a;">
+                <h2 style="font-size:1.3rem;margin-bottom:20px;"><span data-i18n="tipsTitle">💡 Tips for Better Detection</span></h2>
+                <div class="tips-grid">
+                    <div class="tip-card"><h4>💡 <span data-i18n="tip1Title">Good Lighting</span></h4><p><span data-i18n="tip1Desc">Make sure your hands are well lit. Avoid strong backlighting from windows.</span></p></div>
+                    <div class="tip-card"><h4>📏 <span data-i18n="tip2Title">Distance</span></h4><p><span data-i18n="tip2Desc">Keep your hand about 30-60cm from the camera for best results.</span></p></div>
+                    <div class="tip-card"><h4>🎯 <span data-i18n="tip3Title">Clear Background</span></h4><p><span data-i18n="tip3Desc">A plain background helps MediaPipe detect landmarks more accurately.</span></p></div>
+                    <div class="tip-card"><h4>⏱ <span data-i18n="tip4Title">Hold Steady</span></h4><p><span data-i18n="tip4Desc">Hold each gesture for at least 1-2 seconds for reliable detection.</span></p></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Text to Sign -->
+        <div id="tab-t2s" class="tab-content">
+            <div class="t2s-container">
+                <h2 style="font-size:1.3rem;margin-bottom:8px;"><span data-i18n="t2sTitle">Text to</span> <span style="color:var(--accent);" data-i18n="t2sTitleSpan">Sign Language</span></h2>
+                <p style="color:#888;margin-bottom:20px;font-size:0.9rem;"><span data-i18n="t2sSubtitle">Type a word or phrase to see the corresponding ASL sign. Currently supports our trained gesture vocabulary.</span></p>
+                <div class="t2s-input-row">
+                    <input type="text" id="t2sInput" class="t2s-input" placeholder="Type a word (e.g. thanks, i love you)" />
+                    <button onclick="lookupSign()" class="btn btn-primary" data-i18n="lookUp">🔍 Look Up</button>
+                </div>
+                <div id="t2sResult" class="t2s-result">
+                    <p style="color:#555;">Enter a word above to see the sign</p>
+                </div>
+            </div>
+
+            <div style="background:#1a1a1a;border-radius:16px;padding:25px;border:1px solid #2a2a2a;">
+                <h3 style="margin-bottom:15px;font-size:1rem;" data-i18n="availableSigns">Available Signs in Our Vocabulary</h3>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <span onclick="quickLookup('thanks')" style="background:#2a2a2a;padding:8px 16px;border-radius:20px;cursor:pointer;color:var(--accent);font-size:0.85rem;border:1px solid #3a3a3a;">🙏 thanks</span>
+                    <span onclick="quickLookup('i love you')" style="background:#2a2a2a;padding:8px 16px;border-radius:20px;cursor:pointer;color:var(--accent);font-size:0.85rem;border:1px solid #3a3a3a;">🤟 i love you</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Practice Mode -->
+        <div id="tab-practice" class="tab-content">
+            <div class="practice-container">
+                <h2 style="font-size:1.3rem;margin-bottom:8px;"><span data-i18n="practiceTitle">Practice</span> <span style="color:var(--accent);" data-i18n="practiceTitleSpan">Mode</span></h2>
+                <p style="color:#888;margin-bottom:20px;font-size:0.9rem;"><span data-i18n="practiceSubtitle">Select a sign to practice, then perform it in front of your camera. The system will tell you if you got it right!</span></p>
+
+                <div class="practice-gesture-select">
+                    <button class="gesture-select-btn selected" onclick="selectGesture('thanks', this)">🙏 Thanks</button>
+                    <button class="gesture-select-btn" onclick="selectGesture('i love you', this)">🤟 I Love You</button>
+                </div>
+
+                <div class="practice-wrapper">
+                    <div class="practice-video-section">
+                        <div class="practice-video-wrapper">
+                            <video id="practiceVideo" autoplay playsinline></video>
+                            <canvas id="practiceCanvas"></canvas>
+                        </div>
+                        <div class="practice-controls">
+                            <button id="practiceStartBtn" onclick="startPractice()" class="btn btn-primary" style="flex:1;" data-i18n="startPractice">▶ Start Practice</button>
+                            <button id="practiceStopBtn" onclick="stopPractice()" class="btn btn-secondary" style="flex:1;" disabled data-i18n="stopPractice">⏹ Stop</button>
+                        </div>
+                    </div>
+
+                    <div class="practice-feedback">
+                        <div class="target-sign">
+                            <p data-i18n="targetSign">Target Sign</p>
+                            <span class="sign-emoji" id="targetEmoji">🙏</span>
+                            <div class="sign-name" id="targetName">Thanks</div>
+                        </div>
+
+                        <div class="feedback-card" id="feedbackCard">
+                            <div class="feedback-icon" id="feedbackIcon">👋</div>
+                            <div class="feedback-text" id="feedbackText" data-i18n="showSign">Show your sign!</div>
+                            <div class="feedback-sub" id="feedbackSub" data-i18n="positionHand">Position your hand in front of the camera</div>
+                        </div>
+
+                        <div class="practice-score">
+                            <div class="score-chip">
+                                <div class="score-value" id="correctCount">0</div>
+                                <div class="score-label" data-i18n="correct">Correct</div>
+                            </div>
+                            <div class="score-chip">
+                                <div class="score-value" id="attemptCount">0</div>
+                                <div class="score-label" data-i18n="attempts">Attempts</div>
+                            </div>
+                            <div class="score-chip">
+                                <div class="score-value" id="accuracyRate">0%</div>
+                                <div class="score-label" data-i18n="accuracy">Accuracy</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>SignBridge — PUSL3190 Final Year Project | Kannangara K Kannangara | Plymouth University</p>
+        <p style="margin-top:8px;font-size:0.8rem;">
+            <a href="api-docs.html" style="color:var(--accent);">API Documentation</a> &nbsp;·&nbsp;
+            <a href="privacy.html" style="color:#888;">Privacy Policy</a> &nbsp;·&nbsp;
+            <a href="get-api-key.html" style="color:#888;">Get API Key</a>
+        </p>
+    </footer>
+
+    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+    <script src="js/i18n.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+    const BACKEND_URL = 'http://localhost:5001';
+    const socket = io(BACKEND_URL);
+
+    // Sign database
+    const signDatabase = {
+        'thanks': {
+            emoji: '🙏',
+            name: 'Thanks',
+            description: 'Bring your flat hand to your chin and move it forward and slightly downward. Keep your palm facing inward.',
+            steps: ['Hold dominant hand flat', 'Touch fingertips to chin', 'Move forward and slightly down']
+        },
+        'i love you': {
+            emoji: '🤟',
+            name: 'I Love You',
+            description: 'Extend your thumb, index finger, and pinky while curling your middle and ring fingers. Hold steady facing the camera.',
+            steps: ['Make a fist', 'Extend thumb, index, and pinky', 'Hold steady facing camera']
+        },
+        'thank you': {
+            emoji: '🙏',
+            name: 'Thank You',
+            description: 'Same as "Thanks" — bring your flat hand to your chin and move it forward.',
+            steps: ['Hold dominant hand flat', 'Touch fingertips to chin', 'Move forward and slightly down']
+        },
+        'love': {
+            emoji: '❤️',
+            name: 'Love',
+            description: 'Cross both arms over your chest in a self-hug motion.',
+            steps: ['Cross arms over chest', 'Hold the position briefly']
+        }
+    };
+
+    // Tab switching
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + tab).classList.add('active');
+        event.target.classList.add('active');
+    }
+
+    // Text to Sign
+    function lookupSign() {
+        const input = document.getElementById('t2sInput').value.toLowerCase().trim();
+        displaySign(input);
+    }
+
+    function quickLookup(word) {
+        document.getElementById('t2sInput').value = word;
+        displaySign(word);
+    }
+
+    function displaySign(input) {
+        const result = document.getElementById('t2sResult');
+        const sign = signDatabase[input];
+
+        if (sign) {
+            result.innerHTML = `
+                <span class="t2s-emoji">${sign.emoji}</span>
+                <div class="t2s-name">${sign.name}</div>
+                <p class="t2s-description">${sign.description}</p>
+                <div style="margin-top:15px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+                    ${sign.steps.map((s,i) => `<span style="background:#2a2a2a;padding:6px 12px;border-radius:20px;font-size:0.8rem;color:#aaa;">${i+1}. ${s}</span>`).join('')}
+                </div>
+                <button onclick="switchToAndPractice('${input}')" class="btn btn-primary" style="margin-top:20px;">🎯 Practice This Sign</button>
+            `;
+        } else if (input === '') {
+            result.innerHTML = '<p style="color:#555;">Enter a word above to see the sign</p>';
+        } else {
+            result.innerHTML = `
+                <div style="font-size:3rem;margin-bottom:15px;">🤔</div>
+                <p class="t2s-not-found">Sign not found for "${input}"</p>
+                <p style="color:#555;font-size:0.85rem;margin-top:10px;">Currently available: thanks, i love you</p>
+            `;
+        }
+    }
+
+    document.getElementById('t2sInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') lookupSign();
+    });
+
+    function switchToAndPractice(gesture) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-practice').classList.add('active');
+        document.querySelectorAll('.tab-btn')[2].classList.add('active');
+        selectGesture(gesture, document.querySelectorAll('.gesture-select-btn')[gesture === 'thanks' ? 0 : 1]);
+    }
+
+    // Practice Mode
+    let practiceTarget = 'thanks';
+    let practiceVideo = null;
+    let practiceInterval = null;
+    let isPracticing = false;
+    let correctCount = 0;
+    let attemptCount = 0;
+    let lastFeedbackTime = 0;
+
+    const gestureInfo = {
+        'thanks': { emoji: '🙏', name: 'Thanks' },
+        'i love you': { emoji: '🤟', name: 'I Love You' }
+    };
+
+    function selectGesture(gesture, btn) {
+        practiceTarget = gesture;
+        document.querySelectorAll('.gesture-select-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        document.getElementById('targetEmoji').textContent = gestureInfo[gesture].emoji;
+        document.getElementById('targetName').textContent = gestureInfo[gesture].name;
+        resetFeedback();
+    }
+
+    function resetFeedback() {
+        document.getElementById('feedbackIcon').textContent = '👋';
+        document.getElementById('feedbackText').textContent = 'Show your sign!';
+        document.getElementById('feedbackSub').textContent = 'Position your hand in front of the camera';
+        document.getElementById('feedbackCard').style.borderColor = '#2a2a2a';
+    }
+
+    socket.on('prediction', (data) => {
+        if (!isPracticing) return;
+
+        const now = Date.now();
+        if (now - lastFeedbackTime < 2000) return;
+
+        if (data.gesture && data.gesture !== '') {
+            lastFeedbackTime = now;
+            attemptCount++;
+            document.getElementById('attemptCount').textContent = attemptCount;
+
+            if (data.gesture === practiceTarget) {
+                correctCount++;
+                document.getElementById('correctCount').textContent = correctCount;
+                document.getElementById('feedbackIcon').textContent = '✅';
+                document.getElementById('feedbackText').textContent = 'Correct!';
+                document.getElementById('feedbackSub').textContent = `Confidence: ${(data.confidence * 100).toFixed(0)}%`;
+                document.getElementById('feedbackCard').style.background = 'rgba(var(--accent-rgb,0,255,136),0.1)';
+                document.getElementById('feedbackCard').style.border = '1px solid #00ff88';
+            } else {
+                document.getElementById('feedbackIcon').textContent = '❌';
+                document.getElementById('feedbackText').textContent = 'Not quite!';
+                document.getElementById('feedbackSub').textContent = `Detected: ${data.gesture}. Try again!`;
+                document.getElementById('feedbackCard').style.background = 'rgba(255,68,68,0.1)';
+                document.getElementById('feedbackCard').style.border = '1px solid #ff4444';
+            }
+
+            const accuracy = attemptCount > 0 ? Math.round((correctCount / attemptCount) * 100) : 0;
+            document.getElementById('accuracyRate').textContent = accuracy + '%';
+
+            setTimeout(resetFeedback, 1800);
+        }
+    });
+
+    async function startPractice() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+            practiceVideo = document.getElementById('practiceVideo');
+            practiceVideo.srcObject = stream;
+            isPracticing = true;
+            document.getElementById('practiceStartBtn').disabled = true;
+            document.getElementById('practiceStopBtn').disabled = false;
+            correctCount = 0;
+            attemptCount = 0;
+            document.getElementById('correctCount').textContent = 0;
+            document.getElementById('attemptCount').textContent = 0;
+            document.getElementById('accuracyRate').textContent = '0%';
+
+            practiceInterval = setInterval(() => {
+                if (!practiceVideo || !isPracticing) return;
+                const canvas = document.createElement('canvas');
+                canvas.width = practiceVideo.videoWidth;
+                canvas.height = practiceVideo.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.translate(canvas.width, 0);
+                ctx.scale(-1, 1);
+                ctx.drawImage(practiceVideo, 0, 0);
+                socket.emit('frame', { frame: canvas.toDataURL('image/jpeg', 0.7) });
+            }, 100);
+        } catch(err) {
+            alert('Camera access denied.');
+        }
+    }
+
+    function stopPractice() {
+        isPracticing = false;
+        document.getElementById('practiceStartBtn').disabled = false;
+        document.getElementById('practiceStopBtn').disabled = true;
+        if (practiceInterval) { clearInterval(practiceInterval); practiceInterval = null; }
+        if (practiceVideo && practiceVideo.srcObject) {
+            practiceVideo.srcObject.getTracks().forEach(t => t.stop());
+            practiceVideo.srcObject = null;
+        }
+        resetFeedback();
+    }
+    </script>
+<script>
+function toggleTheme() {
+    const body = document.body;
+    const btn = document.getElementById('themeToggle');
+    if (body.classList.contains('light-mode')) {
+        body.classList.remove('light-mode');
+        localStorage.setItem('theme', 'dark');
+        if (btn) btn.textContent = '🌙 Dark';
+    } else {
+        body.classList.add('light-mode');
+        localStorage.setItem('theme', 'light');
+        if (btn) btn.textContent = '☀️ Light';
+    }
+}
+(function() {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'light') {
+        document.body.classList.add('light-mode');
+        const btn = document.getElementById('themeToggle');
+        if (btn) btn.textContent = '☀️ Light';
+    }
+})();
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initI18n();
+});
+</script>
+</body>
+</html>

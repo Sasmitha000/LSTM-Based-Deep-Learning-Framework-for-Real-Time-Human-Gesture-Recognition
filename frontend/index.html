@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#00ff88">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignBridge - Real-Time Sign Language Translator</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav>
+        <a href="index.html" class="logo">SignBridge</a>
+        <ul>
+            <li><a href="index.html" class="active" data-i18n="home">Home</a></li>
+            <li><a href="detection.html" data-i18n="liveDetection">Live Detection</a></li>
+            <li><a href="learning.html" data-i18n="learnSigns" data-i18n="learnSignsBtn">Learn Signs</a></li>
+        </ul>
+        <select id="uiLangSelector" onchange="applyTranslations(this.value)" style="background:var(--bg-tertiary);border:1px solid var(--border-color);color:var(--text-secondary);padding:6px 10px;border-radius:20px;cursor:pointer;font-size:0.82rem;">
+            <option value="en">🇺🇸 EN</option>
+            <option value="es">🇪🇸 ES</option>
+            <option value="fr">🇫🇷 FR</option>
+            <option value="ar">🇸🇦 AR</option>
+            <option value="hi">🇮🇳 HI</option>
+            <option value="ja">🇯🇵 JA</option>
+        </select>
+        <button id="themeToggle" onclick="toggleTheme()" style="background:var(--bg-tertiary);border:1px solid var(--border-color);color:var(--text-secondary);padding:6px 14px;border-radius:20px;cursor:pointer;font-size:0.85rem;transition:all 0.3s;">🌙 Dark</button>
+    </nav>
+    <!-- PWA Install Banner -->
+    <div id="installBanner" style="display:none; background: linear-gradient(135deg, #1a1a2e, #0f3460); border-bottom: 1px solid #00ff88; padding: 12px 20px; text-align: center;">
+        <div style="max-width:800px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <span style="font-size:1.5rem;">✋</span>
+                <div style="text-align:left;">
+                    <p style="margin:0; color:#fff; font-weight:600; font-size:0.9rem;">Install SignBridge App</p>
+                    <p style="margin:0; color:#888; font-size:0.8rem;">Get faster access — works offline for learning!</p>
+                </div>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button id="installBtn" onclick="installPWA()" class="btn btn-primary" style="padding:8px 20px; font-size:0.85rem;">📲 Install App</button>
+                <button onclick="dismissInstall()" style="background:transparent; border:none; color:#555; cursor:pointer; font-size:1.2rem;">✕</button>
+            </div>
+        </div>
+    </div>
+    <section class="hero">
+        <h1><span data-i18n="heroTitle">Breaking Barriers with</span><br><span data-i18n="heroTitleSpan">Sign Language AI</span></h1>
+        <p data-i18n="heroDesc">A real-time sign language translation system powered by deep learning. Using LSTM neural networks and MediaPipe, SignBridge translates hand gestures into text instantly — no special hardware required.</p>
+        <div>
+            <a href="detection.html" class="btn btn-primary" data-i18n="tryDetection">Try Live Detection</a>
+            <a href="learning.html" class="btn btn-secondary" data-i18n="learnSignsBtn">Learn Signs</a>
+        </div>
+    </section>
+    <section class="features">
+        <h2><span data-i18n="whyTitle">Why</span> <span data-i18n="whySpan">SignBridge</span>?</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="icon">⚡</div>
+                <h3 data-i18n="feature1Title">Real-Time Detection</h3>
+                <p data-i18n="feature1Desc">Gesture predictions delivered in under 200ms using WebSocket streaming and cloud-based LSTM inference.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🧠</div>
+                <h3 data-i18n="feature2Title">Deep Learning Powered</h3>
+                <p data-i18n="feature2Desc">Trained on 300 sequences using a 3-layer LSTM network achieving 98.3% accuracy on unseen test data.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">📱</div>
+                <h3 data-i18n="feature3Title">No Special Hardware</h3>
+                <p data-i18n="feature3Desc">Works on any device with a camera and internet connection. All processing happens on the server.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">📚</div>
+                <h3 data-i18n="feature4Title">Learn Sign Language</h3>
+                <p data-i18n="feature4Desc">Built-in learning module with step-by-step guides to help you practise and master sign gestures.</p>
+            </div>
+        </div>
+    </section>
+    <footer>
+        <p>SignBridge — PUSL3190 Final Year Project | Kannangara K Kannangara | Plymouth University</p>
+        <p style="margin-top:8px;font-size:0.8rem;">
+            <a href="api-docs.html" style="color:var(--accent);">API Documentation</a> &nbsp;·&nbsp;
+            <a href="privacy.html" style="color:#888;">Privacy Policy</a> &nbsp;·&nbsp;
+            <a href="get-api-key.html" style="color:#888;">Get API Key</a>
+        </p>
+    </footer>
+    <script src="js/i18n.js"></script>
+    <script src="js/main.js"></script>
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("/service-worker.js").then(()=>console.log("SignBridge SW registered")).catch(e=>console.log("SW error:",e));}</script>
+<script>
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (!localStorage.getItem('pwa_dismissed')) {
+        document.getElementById('installBanner').style.display = 'block';
+    }
+});
+
+function installPWA() {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(result => {
+            if (result.outcome === 'accepted') {
+                document.getElementById('installBanner').style.display = 'none';
+            }
+            deferredPrompt = null;
+        });
+    }
+}
+
+function dismissInstall() {
+    document.getElementById('installBanner').style.display = 'none';
+    localStorage.setItem('pwa_dismissed', 'true');
+}
+
+window.addEventListener('appinstalled', () => {
+    document.getElementById('installBanner').style.display = 'none';
+});
+</script>
+<script>
+function toggleTheme() {
+    const body = document.body;
+    const btn = document.getElementById('themeToggle');
+    if (body.classList.contains('light-mode')) {
+        body.classList.remove('light-mode');
+        localStorage.setItem('theme', 'dark');
+        if (btn) btn.textContent = '🌙 Dark';
+    } else {
+        body.classList.add('light-mode');
+        localStorage.setItem('theme', 'light');
+        if (btn) btn.textContent = '☀️ Light';
+    }
+}
+(function() {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'light') {
+        document.body.classList.add('light-mode');
+        const btn = document.getElementById('themeToggle');
+        if (btn) btn.textContent = '☀️ Light';
+    }
+})();
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initI18n();
+});
+</script>
+</body>
+</html>

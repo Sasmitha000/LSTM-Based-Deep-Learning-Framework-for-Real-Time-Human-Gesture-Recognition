@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - SignBridge</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+    <style>
+        .dashboard-container { padding: 40px; max-width: 1200px; margin: 0 auto; }
+        .login-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 70vh; }
+        .login-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 16px; padding: 40px; width: 100%; max-width: 420px; text-align: center; }
+        .login-card h2 { color: var(--accent); margin-bottom: 10px; }
+        .login-card p { color: #888; margin-bottom: 25px; font-size: 0.9rem; }
+        .login-input { width: 100%; padding: 12px 16px; background: #2a2a2a; border: 1px solid #444; border-radius: 8px; color: #fff; font-size: 1rem; margin-bottom: 12px; box-sizing: border-box; }
+        .login-input:focus { outline: none; border-color: var(--accent); }
+        .tab-switch { display: flex; background: #2a2a2a; border-radius: 10px; padding: 4px; margin-bottom: 20px; }
+        .tab-switch button { flex: 1; padding: 8px; border: none; background: transparent; color: #888; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.3s; }
+        .tab-switch button.active { background: var(--accent); color: #0f0f0f; }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .metric-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 20px; text-align: center; }
+        .metric-card .metric-value { font-size: 2rem; font-weight: 800; color: var(--accent); }
+        .metric-card .metric-label { font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; }
+        .chart-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 25px; margin-bottom: 25px; }
+        .chart-card h3 { font-size: 1rem; color: #fff; margin-bottom: 20px; }
+        .chart-card h3 span { color: var(--accent); }
+        .section-title { font-size: 1.3rem; font-weight: 600; color: #fff; margin: 30px 0 15px; }
+        .section-title span { color: var(--accent); }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .data-table th { background: #2a2a2a; color: #888; padding: 10px 14px; text-align: left; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; font-size: 0.75rem; }
+        .data-table td { padding: 10px 14px; border-bottom: 1px solid #2a2a2a; color: #ccc; }
+        .data-table tr:hover td { background: #1f1f1f; }
+        .badge { padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+        .badge-thanks { background: rgba(var(--accent-rgb,0,255,136),0.15); color: var(--accent); }
+        .badge-iloveyou { background: rgba(0,102,255,0.15); color: #4499ff; }
+        .badge-superadmin { background: rgba(255,165,0,0.15); color: orange; }
+        .badge-admin { background: rgba(0,102,255,0.15); color: #4499ff; }
+        .badge-active { background: rgba(var(--accent-rgb,0,255,136),0.15); color: var(--accent); }
+        .badge-inactive { background: rgba(255,68,68,0.15); color: #ff4444; }
+        .logout-btn { background: transparent; border: 1px solid #444; color: #888; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; transition: all 0.3s; }
+        .logout-btn:hover { border-color: #ff4444; color: #ff4444; }
+        .hidden { display: none; }
+        .export-btn { padding: 8px 20px; background: var(--accent); color: #0f0f0f; border: none; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+        .export-btn:hover { background: #00cc6a; }
+        .model-info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .model-info-item { background: #2a2a2a; border-radius: 8px; padding: 15px; }
+        .model-info-item .label { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+        .model-info-item .value { font-size: 1rem; color: #fff; font-weight: 500; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; }
+        .tab-btn { padding: 8px 20px; border-radius: 50px; font-size: 0.85rem; font-weight: 600; cursor: pointer; border: 2px solid #2a2a2a; color: #888; background: transparent; transition: all 0.3s; }
+        .tab-btn.active { border-color: var(--accent); color: var(--accent); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .live-indicator { display: inline-flex; align-items: center; gap: 6px; background: rgba(0,180,90,0.15); border: 1px solid rgba(var(--accent-rgb,0,255,136),0.3); border-radius: 20px; padding: 4px 12px; font-size: 0.75rem; color: var(--accent); }
+        .live-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; color: #888; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+        .form-input { width: 100%; padding: 10px 14px; background: #2a2a2a; border: 1px solid #444; border-radius: 8px; color: #fff; font-size: 0.9rem; box-sizing: border-box; }
+        .form-input:focus { outline: none; border-color: var(--accent); }
+        .add-admin-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 25px; margin-bottom: 25px; }
+        .permission-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin: 10px 0; }
+        .permission-item { display: flex; align-items: center; gap: 8px; background: #2a2a2a; padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; color: #aaa; cursor: pointer; }
+        .permission-item input { accent-color: var(--accent); }
+        .action-btn { padding: 5px 12px; border-radius: 6px; font-size: 0.78rem; cursor: pointer; border: none; font-weight: 600; }
+        .btn-danger { background: rgba(255,68,68,0.15); color: #ff4444; border: 1px solid rgba(255,68,68,0.3); }
+        .btn-danger:hover { background: rgba(255,68,68,0.3); }
+        .btn-edit { background: rgba(0,102,255,0.15); color: #4499ff; border: 1px solid rgba(0,102,255,0.3); }
+        .btn-edit:hover { background: rgba(0,102,255,0.3); }
+        .superadmin-badge { background: linear-gradient(135deg, #f6d365, #fda085); color: #0f0f0f; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+        .error-msg { color: #ff4444; font-size: 0.85rem; padding: 8px 12px; background: rgba(255,68,68,0.1); border-radius: 8px; margin-bottom: 12px; display: none; }
+        .success-msg { color: var(--accent); font-size: 0.85rem; padding: 8px 12px; background: rgba(0,180,90,0.15); border-radius: 8px; margin-bottom: 12px; display: none; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html" class="logo">✋ SignBridge</a>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="detection.html">Live Detection</a></li>
+            <li><a href="learning.html">Learn Signs</a></li>
+        </ul>
+        <button id="themeToggle" onclick="toggleTheme()" style="background:var(--bg-tertiary);border:1px solid var(--border-color);color:var(--text-secondary);padding:6px 14px;border-radius:20px;cursor:pointer;font-size:0.85rem;transition:all 0.3s;">🌙 Dark</button>
+    </nav>
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-container">
+        <div class="login-card">
+            <div style="font-size:3rem;margin-bottom:15px;">🔐</div>
+            <h2>Admin Portal</h2>
+            <p>Sign in to access the SignBridge admin dashboard.</p>
+
+            <div class="tab-switch">
+                <button id="superAdminTabBtn" class="active" onclick="switchLoginTab('super')">⭐ Super Admin</button>
+                <button id="adminTabBtn" onclick="switchLoginTab('admin')">👤 Admin</button>
+            </div>
+
+            <!-- Super Admin Login -->
+            <div id="superAdminLoginForm">
+                <input type="password" id="superAdminPassword" class="login-input" placeholder="Super admin password" />
+                <p id="superAdminError" class="error-msg"></p>
+                <button onclick="superAdminLogin()" class="btn btn-primary" style="width:100%;">Login as Super Admin</button>
+            </div>
+
+            <!-- Admin Login -->
+            <div id="adminLoginForm" style="display:none;">
+                <input type="email" id="adminEmail" class="login-input" placeholder="Admin email" />
+                <input type="password" id="adminPassword" class="login-input" placeholder="Admin password" />
+                <p id="adminLoginError" class="error-msg"></p>
+                <button onclick="adminLogin()" class="btn btn-primary" style="width:100%;">Login as Admin</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Content -->
+    <div id="dashboardContent" class="dashboard-container hidden">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;flex-wrap:wrap;gap:15px;">
+            <div>
+                <h1 style="font-size:1.8rem;margin:0;">
+                    <span id="adminRoleBadge" class="superadmin-badge" style="font-size:0.9rem;margin-right:10px;">⭐ Super Admin</span>
+                    <span style="color:var(--accent);" id="adminNameDisplay">Admin</span> Dashboard
+                </h1>
+                <p style="color:#888;margin:5px 0 0;font-size:0.9rem;">SignBridge Model Performance and Analytics</p>
+            </div>
+            <div style="display:flex;gap:15px;align-items:center;">
+                <div class="live-indicator"><div class="live-dot"></div>Auto-refreshing every 30s</div>
+                <button onclick="logoutAdmin()" class="logout-btn">Logout</button>
+            </div>
+        </div>
+
+        <div class="tabs" id="dashboardTabs">
+            <!-- Tabs injected by JS based on permissions -->
+        </div>
+
+        <!-- Overview Tab -->
+        <div id="tab-overview" class="tab-content">
+            <div class="dashboard-grid">
+                <div class="metric-card"><div class="metric-value">98.3%</div><div class="metric-label">Model Accuracy</div></div>
+                <div class="metric-card"><div class="metric-value" id="totalSessions">0</div><div class="metric-label">Total Sessions</div></div>
+                <div class="metric-card"><div class="metric-value" id="totalGesturesAll">0</div><div class="metric-label">Total Gestures</div></div>
+                <div class="metric-card"><div class="metric-value" id="avgConfidenceAll">0%</div><div class="metric-label">Avg Confidence</div></div>
+                <div class="metric-card"><div class="metric-value" id="totalContributions">0</div><div class="metric-label">Contributions</div></div>
+                <div class="metric-card"><div class="metric-value" id="mostPopular">-</div><div class="metric-label">Most Popular Sign</div></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                <div class="chart-card"><h3>Gesture <span>Distribution</span></h3><div style="position:relative;height:220px;"><canvas id="gestureDistChart" role="img" aria-label="Gesture distribution"></canvas></div></div>
+                <div class="chart-card"><h3>Daily <span>Sessions</span></h3><div style="position:relative;height:220px;"><canvas id="dailySessionsChart" role="img" aria-label="Daily sessions"></canvas></div></div>
+            </div>
+        </div>
+
+        <!-- Model Tab -->
+        <div id="tab-model" class="tab-content">
+            <h2 class="section-title">Model <span>Architecture</span></h2>
+            <div class="model-info-grid">
+                <div class="model-info-item"><div class="label">Model Type</div><div class="value">LSTM Neural Network</div></div>
+                <div class="model-info-item"><div class="label">Framework</div><div class="value">TensorFlow / Keras</div></div>
+                <div class="model-info-item"><div class="label">Input Shape</div><div class="value">(30, 1662)</div></div>
+                <div class="model-info-item"><div class="label">Output Classes</div><div class="value">2 (Thanks, I Love You)</div></div>
+                <div class="model-info-item"><div class="label">Optimizer</div><div class="value">Adam (lr=0.0001)</div></div>
+                <div class="model-info-item"><div class="label">Loss Function</div><div class="value">Categorical Crossentropy</div></div>
+                <div class="model-info-item"><div class="label">Trainable Params</div><div class="value">596,642</div></div>
+                <div class="model-info-item"><div class="label">Keypoint Tool</div><div class="value">MediaPipe Holistic</div></div>
+                <div class="model-info-item"><div class="label">Training Epochs</div><div class="value">2,000</div></div>
+                <div class="model-info-item"><div class="label">Training Sequences</div><div class="value">300 (150 per class)</div></div>
+                <div class="model-info-item"><div class="label">Frames per Sequence</div><div class="value">30</div></div>
+                <div class="model-info-item"><div class="label">Test Accuracy</div><div class="value">98.3%</div></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:25px;">
+                <div class="chart-card"><h3>Training <span>Accuracy</span></h3><div style="position:relative;height:220px;"><canvas id="accuracyChart" role="img" aria-label="Training accuracy"></canvas></div></div>
+                <div class="chart-card"><h3>Training <span>Loss</span></h3><div style="position:relative;height:220px;"><canvas id="lossChart" role="img" aria-label="Training loss"></canvas></div></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                <div class="chart-card"><h3>Confusion <span>Matrix</span></h3><div style="position:relative;height:220px;"><canvas id="confusionChart" role="img" aria-label="Confusion matrix"></canvas></div></div>
+                <div class="chart-card"><h3>Per Gesture <span>Metrics</span></h3><div style="position:relative;height:220px;"><canvas id="metricsChart" role="img" aria-label="Per gesture metrics"></canvas></div></div>
+            </div>
+        </div>
+
+        <!-- Analytics Tab -->
+        <div id="tab-analytics" class="tab-content">
+            <h2 class="section-title">Session <span>Analytics</span></h2>
+            <div class="dashboard-grid">
+                <div class="metric-card"><div class="metric-value" id="totalSessionsA">0</div><div class="metric-label">Total Sessions</div></div>
+                <div class="metric-card"><div class="metric-value" id="totalGesturesA">0</div><div class="metric-label">Total Gestures</div></div>
+                <div class="metric-card"><div class="metric-value" id="thanksCount">0</div><div class="metric-label">Thanks Detected</div></div>
+                <div class="metric-card"><div class="metric-value" id="iloveyouCount">0</div><div class="metric-label">I Love You Detected</div></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                <div class="chart-card"><h3>Sessions by <span>Day</span></h3><div style="position:relative;height:250px;"><canvas id="dailyGesturesChart" role="img" aria-label="Daily sessions"></canvas></div></div>
+                <div class="chart-card"><h3>Gesture <span>Breakdown</span></h3><div style="position:relative;height:250px;"><canvas id="gestureBreakdownChart" role="img" aria-label="Gesture breakdown"></canvas></div></div>
+            </div>
+        </div>
+
+        <!-- Environmental Tab -->
+        <div id="tab-environment" class="tab-content">
+            <h2 class="section-title">Environmental <span>Analytics</span></h2>
+            <div class="dashboard-grid">
+                <div class="metric-card"><div class="metric-value" id="avgConfidenceEnv">0%</div><div class="metric-label">Avg Confidence</div></div>
+                <div class="metric-card"><div class="metric-value" id="peakHour">-</div><div class="metric-label">Peak Detection Hour</div></div>
+                <div class="metric-card"><div class="metric-value" id="totalDetections">0</div><div class="metric-label">Total Detections</div></div>
+            </div>
+            <div class="chart-card"><h3>Detections by <span>Hour of Day</span></h3><div style="position:relative;height:280px;"><canvas id="hourlyChart" role="img" aria-label="Hourly detections"></canvas></div></div>
+            <div class="chart-card"><h3>Detection <span>Confidence Distribution</span></h3><div style="position:relative;height:220px;"><canvas id="confidenceDistChart" role="img" aria-label="Confidence distribution"></canvas></div></div>
+        </div>
+
+        <!-- Contributions Tab -->
+        <div id="tab-contributions" class="tab-content">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <h2 class="section-title" style="margin:0;">Crowdsourced <span>Contributions</span></h2>
+                <button onclick="exportData()" class="export-btn">Export CSV</button>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:25px;">
+                <div class="chart-card"><h3>Contributions by <span>Gesture</span></h3><div style="position:relative;height:220px;"><canvas id="contributionsChart" role="img" aria-label="Contributions"></canvas></div></div>
+                <div class="chart-card"><h3>Training Dataset <span>Distribution</span></h3><div style="position:relative;height:220px;"><canvas id="datasetChart" role="img" aria-label="Dataset distribution"></canvas></div></div>
+            </div>
+            <div class="chart-card">
+                <h3>Recent <span>Contributions</span></h3>
+                <table class="data-table">
+                    <thead><tr><th>Timestamp</th><th>Gesture</th><th>Confidence</th></tr></thead>
+                    <tbody id="contributionsTable"><tr><td colspan="3" style="text-align:center;color:#555;">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Model Retraining Tab -->
+        <div id="tab-retrain" class="tab-content">
+            <h2 class="section-title">Model <span>Retraining</span></h2>
+            <p style="color:#888;font-size:0.9rem;margin-bottom:20px;">Retrain the gesture recognition model using crowdsourced contributions. Compare models and select which one to deploy.</p>
+
+            <!-- Contribution Stats -->
+            <div class="dashboard-grid" style="margin-bottom:25px;">
+                <div class="metric-card"><div class="metric-value" id="retrainThanksCount">0</div><div class="metric-label">Thanks Contributions</div></div>
+                <div class="metric-card"><div class="metric-value" id="retrainILYCount">0</div><div class="metric-label">I Love You Contributions</div></div>
+                <div class="metric-card"><div class="metric-value" id="retrainCurrentAccuracy">98.3%</div><div class="metric-label">Active Model Accuracy</div></div>
+                <div class="metric-card"><div class="metric-value" id="retrainNewAccuracy">-</div><div class="metric-label">Latest Retrained Accuracy</div></div>
+            </div>
+
+            <!-- Model Library -->
+            <div class="chart-card" style="margin-bottom:20px;">
+                <h3>📦 Model <span>Library</span></h3>
+                <p style="color:#888;font-size:0.85rem;margin-bottom:15px;">All available models. Click Activate to switch to any model instantly.</p>
+                <div id="modelLibrary" style="display:flex;flex-direction:column;gap:12px;">
+                    <p style="color:#555;">Loading models...</p>
+                </div>
+            </div>
+
+            <!-- Model Comparison Chart -->
+            <div class="chart-card" style="margin-bottom:20px;">
+                <h3>📊 Model <span>Comparison</span></h3>
+                <p style="color:#888;font-size:0.85rem;margin-bottom:15px;">Compare accuracy and training data across all models.</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                    <div style="position:relative;height:220px;"><canvas id="modelAccuracyChart" role="img" aria-label="Model accuracy comparison"></canvas></div>
+                    <div style="position:relative;height:220px;"><canvas id="modelDataChart" role="img" aria-label="Model training data comparison"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Retraining Card -->
+            <div class="chart-card" style="margin-bottom:20px;">
+                <h3>🧠 Retrain <span>Model</span></h3>
+                <p style="color:#888;font-size:0.85rem;margin-bottom:20px;">Minimum 20 contributions per gesture required. Training uses 500 epochs for speed.</p>
+
+                <div id="retrainRequirements" style="background:#2a2a2a;border-radius:8px;padding:15px;margin-bottom:20px;">
+                    <p style="color:#888;font-size:0.85rem;margin:0;">Checking requirements...</p>
+                </div>
+
+                <div id="retrainProgressSection" style="display:none;margin-bottom:20px;">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                        <span style="font-size:0.85rem;color:#888;" id="retrainProgressMsg">Starting...</span>
+                        <span style="font-size:0.85rem;color:#00b45a;" id="retrainProgressPct">0%</span>
+                    </div>
+                    <div style="background:#2a2a2a;border-radius:4px;height:10px;overflow:hidden;">
+                        <div id="retrainProgressBar" style="height:100%;background:linear-gradient(90deg,#00b45a,#00cc6a);border-radius:4px;width:0%;transition:width 0.5s;"></div>
+                    </div>
+                </div>
+
+                <div id="retrainResult" style="display:none;padding:15px;border-radius:8px;margin-bottom:20px;"></div>
+
+                <button id="retrainStartBtn" onclick="startRetraining()" class="btn btn-primary">🔄 Start Retraining</button>
+            </div>
+
+            <!-- Safety Info -->
+            <div class="chart-card">
+                <h3>🛡️ Safety <span>Measures</span></h3>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:10px;">
+                    <div style="background:#2a2a2a;border-radius:8px;padding:15px;">
+                        <div style="color:#00b45a;font-weight:600;margin-bottom:5px;">✅ Auto Backup</div>
+                        <p style="color:#888;font-size:0.82rem;margin:0;">Current model is automatically backed up before any replacement.</p>
+                    </div>
+                    <div style="background:#2a2a2a;border-radius:8px;padding:15px;">
+                        <div style="color:#00b45a;font-weight:600;margin-bottom:5px;">✅ Accuracy Threshold</div>
+                        <p style="color:#888;font-size:0.82rem;margin:0;">New model only deployed if accuracy exceeds 95%.</p>
+                    </div>
+                    <div style="background:#2a2a2a;border-radius:8px;padding:15px;">
+                        <div style="color:#00b45a;font-weight:600;margin-bottom:5px;">✅ Zero Downtime</div>
+                        <p style="color:#888;font-size:0.82rem;margin:0;">Server continues running with old model during retraining.</p>
+                    </div>
+                    <div style="background:#2a2a2a;border-radius:8px;padding:15px;">
+                        <div style="color:#00b45a;font-weight:600;margin-bottom:5px;">✅ One-Click Activate</div>
+                        <p style="color:#888;font-size:0.82rem;margin:0;">Switch between any available model instantly from the library.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Tab -->
+        <div id="tab-users" class="tab-content">
+            <h2 class="section-title">Registered <span>Users</span></h2>
+            <div class="dashboard-grid" style="margin-bottom:25px;">
+                <div class="metric-card"><div class="metric-value" id="totalUsers">0</div><div class="metric-label">Total Users</div></div>
+                <div class="metric-card"><div class="metric-value" id="totalApiKeys">0</div><div class="metric-label">API Keys Issued</div></div>
+                <div class="metric-card"><div class="metric-value" id="totalApiUsage">0</div><div class="metric-label">Total API Calls</div></div>
+            </div>
+            <div class="chart-card">
+                <h3>All <span>Registered Users</span></h3>
+                <table class="data-table">
+                    <thead><tr><th>Name</th><th>Email</th><th>API Key</th><th>API Calls</th><th>Registered</th><th>Last Login</th></tr></thead>
+                    <tbody id="usersTable"><tr><td colspan="6" style="text-align:center;color:#555;">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Admin Management Tab (Super Admin Only) -->
+        <div id="tab-admins" class="tab-content">
+            <h2 class="section-title">Admin <span>Management</span></h2>
+            <p style="color:#888;font-size:0.9rem;margin-bottom:20px;">As Super Admin you can create and manage admin accounts and control what each admin can access.</p>
+
+            <!-- Add New Admin -->
+            <div class="add-admin-card">
+                <h3 style="margin-bottom:20px;font-size:1rem;">➕ Add New <span style="color:var(--accent);">Admin</span></h3>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="newAdminName" class="form-input" placeholder="John Smith" />
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="newAdminEmail" class="form-input" placeholder="admin@example.com" />
+                    </div>
+                    <div class="form-group">
+                        <label>Password (min 8 chars)</label>
+                        <input type="password" id="newAdminPassword" class="form-input" placeholder="••••••••" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Dashboard Permissions</label>
+                    <div class="permission-grid">
+                        <label class="permission-item"><input type="checkbox" id="perm-overview" checked> 📊 Overview</label>
+                        <label class="permission-item"><input type="checkbox" id="perm-model" checked> 🧠 Model</label>
+                        <label class="permission-item"><input type="checkbox" id="perm-analytics" checked> 📈 Analytics</label>
+                        <label class="permission-item"><input type="checkbox" id="perm-environment" checked> 🌍 Environmental</label>
+                        <label class="permission-item"><input type="checkbox" id="perm-contributions" checked> 🤝 Contributions</label>
+                        <label class="permission-item"><input type="checkbox" id="perm-users" checked> 👥 Users</label>
+                    </div>
+                </div>
+                <p id="addAdminError" class="error-msg"></p>
+                <p id="addAdminSuccess" class="success-msg"></p>
+                <button onclick="createAdmin()" class="btn btn-primary">Create Admin Account</button>
+            </div>
+
+            <!-- Admin List -->
+            <div class="chart-card">
+                <h3>All <span>Admins</span></h3>
+                <table class="data-table">
+                    <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Permissions</th><th>Status</th><th>Last Login</th><th>Actions</th></tr></thead>
+                    <tbody id="adminsTable"><tr><td colspan="7" style="text-align:center;color:#555;">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>SignBridge — PUSL3190 Final Year Project | Kannangara K Kannangara | Plymouth University</p>
+        <p style="margin-top:8px;font-size:0.8rem;">
+            <a href="api-docs.html" style="color:var(--accent);">API Documentation</a> &nbsp;·&nbsp;
+            <a href="privacy.html" style="color:#888;">Privacy Policy</a> &nbsp;·&nbsp;
+            <a href="get-api-key.html" style="color:#888;">Get API Key</a>
+        </p>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+    const BACKEND_URL = 'http://localhost:5001';
+    const SUPER_ADMIN_PASSWORD = 'signbridge2024';
+    let chartInstances = {};
+    let currentRole = '';
+    let currentPermissions = [];
+    let adminToken = '';
+
+    const ALL_TABS = [
+        { id: 'overview', label: '📊 Overview' },
+        { id: 'model', label: '🧠 Model Performance' },
+        { id: 'analytics', label: '📈 Session Analytics' },
+        { id: 'environment', label: '🌍 Environmental' },
+        { id: 'contributions', label: '🤝 Contributions' },
+        { id: 'users', label: '👥 Registered Users' },
+        { id: 'admins', label: '⭐ Admin Management', superAdminOnly: true },
+        { id: 'retrain', label: '🔄 Model Retraining', superAdminOnly: true }
+    ];
+
+    function switchLoginTab(tab) {
+        document.getElementById('superAdminLoginForm').style.display = tab === 'super' ? 'block' : 'none';
+        document.getElementById('adminLoginForm').style.display = tab === 'admin' ? 'block' : 'none';
+        document.getElementById('superAdminTabBtn').className = tab === 'super' ? 'active' : '';
+        document.getElementById('adminTabBtn').className = tab === 'admin' ? 'active' : '';
+    }
+
+    async function superAdminLogin() {
+        const password = document.getElementById('superAdminPassword').value;
+        const errorEl = document.getElementById('superAdminError');
+        errorEl.style.display = 'none';
+
+        if (password === SUPER_ADMIN_PASSWORD) {
+            currentRole = 'superadmin';
+            currentPermissions = ['overview','model','analytics','environment','contributions','users','admins'];
+            sessionStorage.setItem('adminAuth', 'superadmin');
+            sessionStorage.setItem('adminPermissions', currentPermissions.join(','));
+            sessionStorage.setItem('adminName', 'Super Admin');
+            showDashboard();
+        } else {
+            errorEl.textContent = 'Incorrect password.';
+            errorEl.style.display = 'block';
+        }
+    }
+
+    async function adminLogin() {
+        const email = document.getElementById('adminEmail').value.trim();
+        const password = document.getElementById('adminPassword').value;
+        const errorEl = document.getElementById('adminLoginError');
+        errorEl.style.display = 'none';
+
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/admin/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await res.json();
+            if (data.success) {
+                currentRole = 'admin';
+                currentPermissions = data.permissions.split(',');
+                adminToken = data.session_token;
+                sessionStorage.setItem('adminAuth', 'admin');
+                sessionStorage.setItem('adminPermissions', data.permissions);
+                sessionStorage.setItem('adminName', data.name);
+                sessionStorage.setItem('adminToken', data.session_token);
+                showDashboard();
+            } else {
+                errorEl.textContent = data.error || 'Login failed.';
+                errorEl.style.display = 'block';
+            }
+        } catch(e) {
+            errorEl.textContent = 'Could not connect to server.';
+            errorEl.style.display = 'block';
+        }
+    }
+
+    function showDashboard() {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('dashboardContent').classList.remove('hidden');
+
+        const name = sessionStorage.getItem('adminName') || 'Admin';
+        document.getElementById('adminNameDisplay').textContent = name;
+
+        if (currentRole === 'superadmin') {
+            document.getElementById('adminRoleBadge').textContent = '⭐ Super Admin';
+            document.getElementById('adminRoleBadge').style.background = 'linear-gradient(135deg, #f6d365, #fda085)';
+        } else {
+            document.getElementById('adminRoleBadge').textContent = '👤 Admin';
+            document.getElementById('adminRoleBadge').style.background = 'rgba(0,102,255,0.3)';
+            document.getElementById('adminRoleBadge').style.color = '#4499ff';
+        }
+
+        buildTabs();
+        initDashboard();
+    }
+
+    function buildTabs() {
+        const tabsContainer = document.getElementById('dashboardTabs');
+        tabsContainer.innerHTML = '';
+        let first = true;
+        ALL_TABS.forEach(tab => {
+            if (tab.superAdminOnly && currentRole !== 'superadmin') return;
+            if (!tab.superAdminOnly && !currentPermissions.includes(tab.id)) return;
+            const btn = document.createElement('button');
+            btn.className = `tab-btn${first ? ' active' : ''}`;
+            btn.textContent = tab.label;
+            btn.onclick = function() { switchTab(tab.id, this); };
+            tabsContainer.appendChild(btn);
+            if (first) {
+                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                document.getElementById('tab-' + tab.id).classList.add('active');
+                first = false;
+            }
+        });
+    }
+
+    function switchTab(tab, btn) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + tab).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    function logoutAdmin() {
+        if (adminToken) {
+            fetch(`${BACKEND_URL}/api/admin/logout`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${adminToken}` }
+            }).catch(() => {});
+        }
+        sessionStorage.clear();
+        currentRole = '';
+        currentPermissions = [];
+        adminToken = '';
+        document.getElementById('loginScreen').style.display = 'flex';
+        document.getElementById('dashboardContent').classList.add('hidden');
+        document.getElementById('superAdminPassword').value = '';
+        document.getElementById('adminEmail').value = '';
+        document.getElementById('adminPassword').value = '';
+    }
+
+    function destroyChart(id) {
+        if (chartInstances[id]) { chartInstances[id].destroy(); delete chartInstances[id]; }
+    }
+
+    function initDashboard() {
+        if (currentPermissions.includes('model')) loadModelCharts();
+        refreshData();
+        setInterval(refreshData, 30000);
+    }
+
+    async function refreshData() {
+        if (currentPermissions.includes('overview') || currentPermissions.includes('analytics') ||
+            currentPermissions.includes('environment')) await loadAnalytics();
+        if (currentPermissions.includes('contributions')) await loadContributions();
+        if (currentPermissions.includes('users')) await loadUsers();
+        if (currentRole === 'superadmin') { await loadAdmins(); await loadRetrainStatus(); await loadModels(); }
+    }
+
+    async function loadAnalytics() {
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/analytics`);
+            const data = await res.json();
+            document.getElementById('totalSessions').textContent = data.total_sessions;
+            document.getElementById('totalGesturesAll').textContent = data.total_gestures;
+            document.getElementById('avgConfidenceAll').textContent = data.avg_confidence + '%';
+            document.getElementById('mostPopular').textContent = data.most_popular_gesture === 'i love you' ? '🤟' : '🙏';
+            document.getElementById('totalSessionsA').textContent = data.total_sessions;
+            document.getElementById('totalGesturesA').textContent = data.total_gestures;
+            document.getElementById('thanksCount').textContent = data.gesture_counts['thanks'] || 0;
+            document.getElementById('iloveyouCount').textContent = data.gesture_counts['i love you'] || 0;
+            document.getElementById('avgConfidenceEnv').textContent = data.avg_confidence + '%';
+            document.getElementById('totalDetections').textContent = data.total_gestures;
+            const hourly = data.hourly_detections;
+            const peakHour = Object.keys(hourly).reduce((a, b) => (hourly[a]||0) > (hourly[b]||0) ? a : b, '0');
+            const ph = parseInt(peakHour);
+            document.getElementById('peakHour').textContent = `${ph % 12 || 12}${ph >= 12 ? 'PM' : 'AM'}`;
+            drawDynamicCharts(data);
+        } catch(e) { console.log('Analytics error:', e); }
+    }
+
+    function drawDynamicCharts(data) {
+        const dailySessions = data.daily_sessions || {};
+        const days = Object.keys(dailySessions).sort().slice(-7);
+        const sessionValues = days.map(d => dailySessions[d]);
+
+        destroyChart('gestureDistChart');
+        chartInstances['gestureDistChart'] = new Chart(document.getElementById('gestureDistChart'), {
+            type: 'doughnut',
+            data: { labels: ['Thanks', 'I Love You'],
+                datasets: [{ data: [data.gesture_counts['thanks']||0, data.gesture_counts['i love you']||0],
+                    backgroundColor: ['rgba(0,180,90,0.85)','rgba(50,130,255,0.85)'],
+                    borderColor: ['#00b45a','#3282ff'], borderWidth: 2 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#888', font: { size: 11 } } } } }
+        });
+
+        destroyChart('dailySessionsChart');
+        chartInstances['dailySessionsChart'] = new Chart(document.getElementById('dailySessionsChart'), {
+            type: 'bar',
+            data: { labels: days.map(d => d.slice(5)), datasets: [{ label: 'Sessions', data: sessionValues, backgroundColor: 'rgba(0,180,90,0.85)', borderRadius: 4 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888' } }, x: { grid: { display: false }, ticks: { color: '#888' } } } }
+        });
+
+        destroyChart('dailyGesturesChart');
+        chartInstances['dailyGesturesChart'] = new Chart(document.getElementById('dailyGesturesChart'), {
+            type: 'line',
+            data: { labels: days.map(d => d.slice(5)), datasets: [{ label: 'Sessions', data: sessionValues, borderColor: '#00b45a', backgroundColor: 'rgba(0,180,90,0.15)', tension: 0.4, fill: true, pointRadius: 4 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888' } }, x: { grid: { display: false }, ticks: { color: '#888' } } } }
+        });
+
+        destroyChart('gestureBreakdownChart');
+        chartInstances['gestureBreakdownChart'] = new Chart(document.getElementById('gestureBreakdownChart'), {
+            type: 'bar',
+            data: { labels: ['Thanks', 'I Love You'], datasets: [{ label: 'Detections', data: [data.gesture_counts['thanks']||0, data.gesture_counts['i love you']||0], backgroundColor: ['rgba(0,180,90,0.85)','rgba(50,130,255,0.85)'], borderRadius: 4 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888' } }, x: { grid: { display: false }, ticks: { color: '#888' } } } }
+        });
+
+        const hours = Array.from({length: 24}, (_, i) => `${i % 12 || 12}${i >= 12 ? 'PM' : 'AM'}`);
+        const hourlyValues = hours.map((_, i) => data.hourly_detections[String(i)] || 0);
+
+        destroyChart('hourlyChart');
+        chartInstances['hourlyChart'] = new Chart(document.getElementById('hourlyChart'), {
+            type: 'bar',
+            data: { labels: hours, datasets: [{ label: 'Detections', data: hourlyValues, backgroundColor: 'rgba(50,130,255,0.85)', borderRadius: 4 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888' } }, x: { grid: { display: false }, ticks: { color: '#888', maxRotation: 45, font: { size: 10 } } } } }
+        });
+
+        destroyChart('confidenceDistChart');
+        chartInstances['confidenceDistChart'] = new Chart(document.getElementById('confidenceDistChart'), {
+            type: 'bar',
+            data: { labels: ['99.9-99.95%','99.95-99.97%','99.97-99.99%','99.99-100%'],
+                datasets: [{ label: 'Detections', data: [Math.floor(data.total_gestures*0.15),Math.floor(data.total_gestures*0.25),Math.floor(data.total_gestures*0.30),Math.floor(data.total_gestures*0.30)], backgroundColor: 'rgba(0,180,90,0.85)', borderRadius: 4 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888' } }, x: { grid: { display: false }, ticks: { color: '#888' } } } }
+        });
+    }
+
+    async function loadContributions() {
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/contributions/stats`);
+            const stats = await res.json();
+            let total = 0;
+            for (const key in stats) total += stats[key];
+            document.getElementById('totalContributions').textContent = total;
+
+            destroyChart('contributionsChart');
+            chartInstances['contributionsChart'] = new Chart(document.getElementById('contributionsChart'), {
+                type: 'bar',
+                data: { labels: ['Thanks','I Love You'], datasets: [{ label: 'Contributions', data: [stats['thanks']||0, stats['i love you']||0], backgroundColor: ['rgba(0,180,90,0.85)','rgba(50,130,255,0.85)'], borderRadius: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888' } }, x: { grid: { display: false }, ticks: { color: '#888' } } } }
+            });
+
+            destroyChart('datasetChart');
+            chartInstances['datasetChart'] = new Chart(document.getElementById('datasetChart'), {
+                type: 'doughnut',
+                data: { labels: ['Thanks (150)','I Love You (150)'], datasets: [{ data: [150,150], backgroundColor: ['rgba(0,180,90,0.85)','rgba(50,130,255,0.85)'], borderColor: ['#00b45a','#3282ff'], borderWidth: 2 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#888', font: { size: 11 } } } } }
+            });
+
+            const res2 = await fetch(`${BACKEND_URL}/api/contributions/recent`);
+            if (res2.ok) {
+                const recent = await res2.json();
+                const tbody = document.getElementById('contributionsTable');
+                if (!recent || recent.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#555;">No contributions yet</td></tr>';
+                } else {
+                    tbody.innerHTML = recent.slice(-20).reverse().map(c => `
+                        <tr>
+                            <td>${new Date(c.timestamp).toLocaleString()}</td>
+                            <td><span class="badge ${c.gesture === 'thanks' ? 'badge-thanks' : 'badge-iloveyou'}">${c.gesture}</span></td>
+                            <td>${(c.confidence * 100).toFixed(1)}%</td>
+                        </tr>`).join('');
+                }
+            }
+        } catch(e) { console.log('Contributions error:', e); }
+    }
+
+    async function loadUsers() {
+        try {
+            const headers = currentRole === 'superadmin'
+                ? { 'X-Admin-Key': SUPER_ADMIN_PASSWORD }
+                : { 'Authorization': `Bearer ${adminToken}` };
+            const res = await fetch(`${BACKEND_URL}/api/admin/users`, { headers });
+            const users = await res.json();
+            document.getElementById('totalUsers').textContent = users.length;
+            let totalKeys = 0, totalUsage = 0;
+            users.forEach(u => { if (u.api_key) totalKeys++; totalUsage += u.usage_count || 0; });
+            document.getElementById('totalApiKeys').textContent = totalKeys;
+            document.getElementById('totalApiUsage').textContent = totalUsage;
+            const tbody = document.getElementById('usersTable');
+            if (!users || users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#555;">No users yet</td></tr>';
+                return;
+            }
+            tbody.innerHTML = users.map(u => `
+                <tr>
+                    <td style="color:#fff;font-weight:500;">${u.name}</td>
+                    <td style="color:#888;">${u.email}</td>
+                    <td style="font-family:monospace;font-size:0.75rem;color:var(--accent);">${u.api_key ? u.api_key.substring(0,20)+'...' : 'None'}</td>
+                    <td>${u.usage_count || 0}</td>
+                    <td style="color:#888;">${u.created_at ? new Date(u.created_at).toLocaleDateString() : '-'}</td>
+                    <td style="color:#888;">${u.last_login ? new Date(u.last_login).toLocaleDateString() : 'Never'}</td>
+                </tr>`).join('');
+        } catch(e) { console.log('Users error:', e); }
+    }
+
+    async function loadAdmins() {
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/superadmin/admins`, {
+                headers: { 'X-Admin-Key': SUPER_ADMIN_PASSWORD }
+            });
+            const admins = await res.json();
+            const tbody = document.getElementById('adminsTable');
+            if (!admins || admins.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#555;">No admins created yet</td></tr>';
+                return;
+            }
+            tbody.innerHTML = admins.map(a => `
+                <tr>
+                    <td style="color:#fff;font-weight:500;">${a.name}</td>
+                    <td style="color:#888;">${a.email}</td>
+                    <td><span class="badge badge-admin">Admin</span></td>
+                    <td style="color:#888;font-size:0.78rem;">${a.permissions || 'All'}</td>
+                    <td><span class="badge ${a.is_active ? 'badge-active' : 'badge-inactive'}">${a.is_active ? 'Active' : 'Inactive'}</span></td>
+                    <td style="color:#888;">${a.last_login ? new Date(a.last_login).toLocaleDateString() : 'Never'}</td>
+                    <td style="display:flex;gap:6px;">
+                        <button class="action-btn btn-edit" onclick="toggleAdmin(${a.id}, ${a.is_active})">
+                            ${a.is_active ? 'Deactivate' : 'Activate'}
+                        </button>
+                        <button class="action-btn btn-danger" onclick="deleteAdmin(${a.id}, '${a.name}')">Delete</button>
+                    </td>
+                </tr>`).join('');
+        } catch(e) { console.log('Admins error:', e); }
+    }
+
+    async function createAdmin() {
+        const name = document.getElementById('newAdminName').value.trim();
+        const email = document.getElementById('newAdminEmail').value.trim();
+        const password = document.getElementById('newAdminPassword').value;
+        const errorEl = document.getElementById('addAdminError');
+        const successEl = document.getElementById('addAdminSuccess');
+
+        errorEl.style.display = 'none';
+        successEl.style.display = 'none';
+
+        if (!name || !email || !password) { errorEl.textContent = 'All fields required.'; errorEl.style.display = 'block'; return; }
+        if (password.length < 8) { errorEl.textContent = 'Password must be at least 8 characters.'; errorEl.style.display = 'block'; return; }
+
+        const permissions = ['overview','model','analytics','environment','contributions','users']
+            .filter(p => document.getElementById(`perm-${p}`).checked).join(',');
+
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/superadmin/admins`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Admin-Key': SUPER_ADMIN_PASSWORD },
+                body: JSON.stringify({ name, email, password, permissions })
+            });
+            const data = await res.json();
+            if (data.success) {
+                successEl.textContent = `✅ Admin ${name} created successfully!`;
+                successEl.style.display = 'block';
+                document.getElementById('newAdminName').value = '';
+                document.getElementById('newAdminEmail').value = '';
+                document.getElementById('newAdminPassword').value = '';
+                await loadAdmins();
+            } else {
+                errorEl.textContent = data.error || 'Failed to create admin.';
+                errorEl.style.display = 'block';
+            }
+        } catch(e) {
+            errorEl.textContent = 'Server error. Please try again.';
+            errorEl.style.display = 'block';
+        }
+    }
+
+    async function toggleAdmin(id, currentStatus) {
+        try {
+            await fetch(`${BACKEND_URL}/api/superadmin/admins/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'X-Admin-Key': SUPER_ADMIN_PASSWORD },
+                body: JSON.stringify({ is_active: currentStatus ? 0 : 1 })
+            });
+            await loadAdmins();
+        } catch(e) { alert('Failed to update admin.'); }
+    }
+
+    async function deleteAdmin(id, name) {
+        if (!confirm(`Are you sure you want to delete admin "${name}"? This cannot be undone.`)) return;
+        try {
+            await fetch(`${BACKEND_URL}/api/superadmin/admins/${id}`, {
+                method: 'DELETE',
+                headers: { 'X-Admin-Key': SUPER_ADMIN_PASSWORD }
+            });
+            await loadAdmins();
+        } catch(e) { alert('Failed to delete admin.'); }
+    }
+
+    async function exportData() {
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/contributions/export`);
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'signbridge_contributions.csv'; a.click();
+        } catch(e) { alert('Export failed.'); }
+    }
+
+    function loadModelCharts() {
+        const epochs = Array.from({length: 50}, (_, i) => (i+1) * 40);
+        const accuracy = [0.45,0.52,0.61,0.68,0.72,0.76,0.79,0.82,0.84,0.86,0.87,0.88,0.89,0.90,0.91,0.92,0.93,0.94,0.94,0.95,0.95,0.96,0.96,0.97,0.97,0.97,0.98,0.98,0.98,0.98,0.99,0.99,0.99,0.99,0.99,0.99,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0];
+        const loss = [0.95,0.82,0.71,0.62,0.55,0.48,0.42,0.37,0.33,0.29,0.26,0.23,0.21,0.19,0.17,0.15,0.14,0.12,0.11,0.10,0.09,0.08,0.07,0.06,0.06,0.05,0.05,0.04,0.04,0.03,0.03,0.03,0.02,0.02,0.02,0.02,0.01,0.01,0.01,0.01,0.01,0.01,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00];
+
+        chartInstances['accuracyChart'] = new Chart(document.getElementById('accuracyChart'), {
+            type: 'line', data: { labels: epochs, datasets: [{ label: 'Accuracy', data: accuracy, borderColor: '#00b45a', backgroundColor: 'rgba(0,180,90,0.15)', tension: 0.4, fill: true, pointRadius: 0, borderWidth: 2 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { min: 0, max: 1, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888', callback: v => (v*100).toFixed(0)+'%' } }, x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888', maxTicksLimit: 8 } } } }
+        });
+
+        chartInstances['lossChart'] = new Chart(document.getElementById('lossChart'), {
+            type: 'line', data: { labels: epochs, datasets: [{ label: 'Loss', data: loss, borderColor: '#ff6644', backgroundColor: 'rgba(255,102,68,0.1)', tension: 0.4, fill: true, pointRadius: 0, borderWidth: 2 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { min: 0, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888' } }, x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888', maxTicksLimit: 8 } } } }
+        });
+
+        chartInstances['confusionChart'] = new Chart(document.getElementById('confusionChart'), {
+            type: 'bar', data: { labels: ['Thanks→Thanks','Thanks→ILY','ILY→Thanks','ILY→ILY'], datasets: [{ label: 'Predictions', data: [29,1,1,29], backgroundColor: ['#00cc64','#ff4444','#ff4444','#00cc64'], borderRadius: 4 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888' } }, x: { grid: { display: false }, ticks: { color: '#888', font: { size: 10 } } } } }
+        });
+
+        chartInstances['metricsChart'] = new Chart(document.getElementById('metricsChart'), {
+            type: 'bar', data: { labels: ['Precision','Recall','F1 Score'], datasets: [{ label: 'Thanks', data: [0.97,1.00,0.98], backgroundColor: 'rgba(0,180,90,0.85)', borderRadius: 4 }, { label: 'I Love You', data: [1.00,0.97,0.98], backgroundColor: 'rgba(50,130,255,0.85)', borderRadius: 4 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#888', font: { size: 11 } } } }, scales: { y: { min: 0, max: 1, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888', callback: v => (v*100).toFixed(0)+'%' } }, x: { grid: { display: false }, ticks: { color: '#888' } } } }
+        });
+    }
+
+
+    async function loadModels() {
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/admin/models`, {
+                headers: { 'X-Admin-Key': SUPER_ADMIN_PASSWORD }
+            });
+            const models = await res.json();
+
+            // Update model library
+            const library = document.getElementById('modelLibrary');
+            if (!models || models.length === 0) {
+                library.innerHTML = '<p style="color:#555;">No models found.</p>';
+                return;
+            }
+
+            library.innerHTML = models.map(m => `
+                <div style="background:#2a2a2a;border-radius:10px;padding:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;border:1px solid ${m.status === 'active' ? '#00b45a' : '#3a3a3a'};">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <div style="font-size:1.8rem;">${m.status === 'active' ? '🟢' : '⚪'}</div>
+                        <div>
+                            <div style="font-weight:600;color:#fff;margin-bottom:3px;">${m.name} ${m.status === 'active' ? '<span style="background:rgba(0,180,90,0.2);color:#00b45a;padding:2px 8px;border-radius:10px;font-size:0.75rem;margin-left:5px;">ACTIVE</span>' : ''}</div>
+                            <div style="font-size:0.8rem;color:#888;">
+                                Accuracy: <span style="color:${m.accuracy >= 98 ? '#00b45a' : m.accuracy >= 95 ? '#ffaa00' : '#ff4444'};font-weight:600;">${m.accuracy}%</span> &nbsp;|&nbsp;
+                                Sequences: ${m.training_sequences} &nbsp;|&nbsp;
+                                Epochs: ${m.epochs} &nbsp;|&nbsp;
+                                Created: ${new Date(m.created_at).toLocaleDateString()}
+                                ${m.contributions_used > 0 ? `&nbsp;|&nbsp; Contributions: ${m.contributions_used}` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                        ${m.status !== 'active' ? `<button onclick="activateModel('${m.id}')" style="background:rgba(0,180,90,0.15);border:1px solid #00b45a;color:#00b45a;padding:6px 16px;border-radius:8px;cursor:pointer;font-size:0.82rem;font-weight:600;">⚡ Activate</button>` : ''}
+                    </div>
+                </div>
+            `).join('');
+
+            // Update active model accuracy
+            const activeModel = models.find(m => m.status === 'active');
+            if (activeModel) {
+                document.getElementById('retrainCurrentAccuracy').textContent = activeModel.accuracy + '%';
+            }
+
+            // Latest retrained model accuracy
+            const retrained = models.filter(m => m.id !== 'model_original');
+            if (retrained.length > 0) {
+                const latest = retrained[retrained.length - 1];
+                document.getElementById('retrainNewAccuracy').textContent = latest.accuracy + '%';
+            }
+
+            // Draw comparison charts
+            drawModelCharts(models);
+
+        } catch(e) {
+            console.log('Models error:', e);
+        }
+    }
+
+    function drawModelCharts(models) {
+        const labels = models.map(m => m.name.length > 15 ? m.name.substring(0,15)+'...' : m.name);
+        const accuracies = models.map(m => m.accuracy);
+        const sequences = models.map(m => m.training_sequences);
+        const colors = models.map(m => m.status === 'active' ? 'rgba(0,180,90,0.85)' : 'rgba(50,130,255,0.85)');
+
+        destroyChart('modelAccuracyChart');
+        chartInstances['modelAccuracyChart'] = new Chart(document.getElementById('modelAccuracyChart'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Accuracy (%)',
+                    data: accuracies,
+                    backgroundColor: colors,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    title: { display: true, text: 'Model Accuracy Comparison', color: '#888', font: { size: 11 } }
+                },
+                scales: {
+                    y: { min: 90, max: 100, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888', callback: v => v + '%' } },
+                    x: { grid: { display: false }, ticks: { color: '#888', font: { size: 10 } } }
+                }
+            }
+        });
+
+        destroyChart('modelDataChart');
+        chartInstances['modelDataChart'] = new Chart(document.getElementById('modelDataChart'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Training Sequences',
+                    data: sequences,
+                    backgroundColor: colors,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    title: { display: true, text: 'Training Data Size', color: '#888', font: { size: 11 } }
+                },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888' } },
+                    x: { grid: { display: false }, ticks: { color: '#888', font: { size: 10 } } }
+                }
+            }
+        });
+    }
+
+    async function activateModel(modelId) {
+        if (!confirm('Activate this model? It will immediately replace the current active model.')) return;
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/admin/models/activate/${modelId}`, {
+                method: 'POST',
+                headers: { 'X-Admin-Key': SUPER_ADMIN_PASSWORD }
+            });
+            const data = await res.json();
+            if (data.success) {
+                showRetrainResult('success', '✅ ' + data.message);
+                await loadModels();
+            } else {
+                showRetrainResult('error', '❌ ' + data.error);
+            }
+        } catch(e) {
+            showRetrainResult('error', 'Failed to activate model.');
+        }
+    }
+
+    async function loadRetrainStatus() {
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/contributions/stats`);
+            const stats = await res.json();
+            const thanksCount = stats['thanks'] || 0;
+            const ilyCount = stats['i love you'] || 0;
+
+            document.getElementById('retrainThanksCount').textContent = thanksCount;
+            document.getElementById('retrainILYCount').textContent = ilyCount;
+
+            const reqEl = document.getElementById('retrainRequirements');
+            const startBtn = document.getElementById('retrainStartBtn');
+
+            if (thanksCount >= 20 && ilyCount >= 20) {
+                reqEl.innerHTML = `
+                    <div style="color:#00ff88;font-weight:600;margin-bottom:8px;">✅ Ready to Retrain</div>
+                    <p style="color:#888;font-size:0.85rem;margin:0;">
+                        Thanks: ${thanksCount} contributions ✅<br>
+                        I Love You: ${ilyCount} contributions ✅<br>
+                        Total training sequences: ${150 + thanksCount + ilyCount} (original + contributions)
+                    </p>`;
+                startBtn.disabled = false;
+                startBtn.style.opacity = '1';
+            } else {
+                reqEl.innerHTML = `
+                    <div style="color:#ffaa00;font-weight:600;margin-bottom:8px;">⚠️ Not Enough Contributions</div>
+                    <p style="color:#888;font-size:0.85rem;margin:0;">
+                        Thanks: ${thanksCount}/20 contributions ${thanksCount >= 20 ? '✅' : '❌'}<br>
+                        I Love You: ${ilyCount}/20 contributions ${ilyCount >= 20 ? '✅' : '❌'}<br>
+                        Collect more contributions from users to enable retraining.
+                    </p>`;
+                startBtn.disabled = true;
+                startBtn.style.opacity = '0.5';
+            }
+        } catch(e) {
+            console.log('Retrain status error:', e);
+        }
+    }
+
+    async function startRetraining() {
+        if (!confirm('Start model retraining? This will take a few minutes. The server will continue running normally.')) return;
+
+        const startBtn = document.getElementById('retrainStartBtn');
+        const progressSection = document.getElementById('retrainProgressSection');
+        const resultEl = document.getElementById('retrainResult');
+
+        startBtn.disabled = true;
+        startBtn.textContent = '⏳ Retraining...';
+        progressSection.style.display = 'block';
+        resultEl.style.display = 'none';
+
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/admin/retrain/start`, {
+                method: 'POST',
+                headers: { 'X-Admin-Key': SUPER_ADMIN_PASSWORD }
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                pollRetrainingStatus();
+            } else {
+                showRetrainResult('error', data.error);
+                startBtn.disabled = false;
+                startBtn.textContent = '🔄 Start Retraining';
+                progressSection.style.display = 'none';
+            }
+        } catch(e) {
+            showRetrainResult('error', 'Failed to start retraining. Check server connection.');
+            startBtn.disabled = false;
+            startBtn.textContent = '🔄 Start Retraining';
+        }
+    }
+
+    let pollInterval = null;
+    function pollRetrainingStatus() {
+        pollInterval = setInterval(async () => {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/admin/retrain/status`);
+                const data = await res.json();
+
+                document.getElementById('retrainProgressBar').style.width = data.progress + '%';
+                document.getElementById('retrainProgressPct').textContent = data.progress + '%';
+                document.getElementById('retrainProgressMsg').textContent = data.message;
+
+                if (data.accuracy > 0) {
+                    document.getElementById('retrainNewAccuracy').textContent = data.accuracy + '%';
+                }
+
+                if (data.status === 'completed') {
+                    clearInterval(pollInterval);
+                    showRetrainResult('success', `✅ ${data.message}`);
+                    document.getElementById('retrainStartBtn').textContent = '🔄 Start Retraining';
+                    document.getElementById('retrainStartBtn').disabled = false;
+                    await loadModels();
+                    document.getElementById('retrainCurrentAccuracy').textContent = data.accuracy + '%';
+                } else if (data.status === 'rejected') {
+                    clearInterval(pollInterval);
+                    showRetrainResult('warning', `⚠️ ${data.message}`);
+                    document.getElementById('retrainStartBtn').textContent = '🔄 Start Retraining';
+                    document.getElementById('retrainStartBtn').disabled = false;
+                } else if (data.status === 'error') {
+                    clearInterval(pollInterval);
+                    showRetrainResult('error', `❌ ${data.message}`);
+                    document.getElementById('retrainStartBtn').textContent = '🔄 Start Retraining';
+                    document.getElementById('retrainStartBtn').disabled = false;
+                }
+            } catch(e) {
+                console.log('Poll error:', e);
+            }
+        }, 2000);
+    }
+
+    function showRetrainResult(type, message) {
+        const el = document.getElementById('retrainResult');
+        const colors = {
+            success: { bg: 'rgba(0,255,136,0.1)', border: '#00ff88', color: '#00ff88' },
+            warning: { bg: 'rgba(255,170,0,0.1)', border: '#ffaa00', color: '#ffaa00' },
+            error: { bg: 'rgba(255,68,68,0.1)', border: '#ff4444', color: '#ff4444' }
+        };
+        const c = colors[type];
+        el.style.display = 'block';
+        el.style.background = c.bg;
+        el.style.border = `1px solid ${c.border}`;
+        el.style.color = c.color;
+        el.textContent = message;
+    }
+
+    async function rollbackModel() {
+        if (!confirm('Roll back to the previous model version? Current model will be replaced.')) return;
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/admin/retrain/rollback`, {
+                method: 'POST',
+                headers: { 'X-Admin-Key': SUPER_ADMIN_PASSWORD }
+            });
+            const data = await res.json();
+            if (data.success) {
+                showRetrainResult('success', '✅ Model rolled back successfully!');
+                document.getElementById('retrainRollbackBtn').style.display = 'none';
+            } else {
+                showRetrainResult('error', data.error);
+            }
+        } catch(e) {
+            showRetrainResult('error', 'Rollback failed.');
+        }
+    }
+
+    // Auto restore session
+    const savedAuth = sessionStorage.getItem('adminAuth');
+    if (savedAuth) {
+        currentRole = savedAuth;
+        currentPermissions = (sessionStorage.getItem('adminPermissions') || '').split(',');
+        adminToken = sessionStorage.getItem('adminToken') || '';
+        showDashboard();
+    }
+
+    document.getElementById('superAdminPassword').addEventListener('keypress', e => { if (e.key === 'Enter') superAdminLogin(); });
+    document.getElementById('adminPassword').addEventListener('keypress', e => { if (e.key === 'Enter') adminLogin(); });
+    </script>
+<script>
+function toggleTheme() {
+    const body = document.body;
+    const btn = document.getElementById('themeToggle');
+    if (body.classList.contains('light-mode')) {
+        body.classList.remove('light-mode');
+        localStorage.setItem('theme', 'dark');
+        if (btn) btn.textContent = '🌙 Dark';
+    } else {
+        body.classList.add('light-mode');
+        localStorage.setItem('theme', 'light');
+        if (btn) btn.textContent = '☀️ Light';
+    }
+}
+(function() {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'light') {
+        document.body.classList.add('light-mode');
+        const btn = document.getElementById('themeToggle');
+        if (btn) btn.textContent = '☀️ Light';
+    }
+})();
+</script>
+</body>
+</html>

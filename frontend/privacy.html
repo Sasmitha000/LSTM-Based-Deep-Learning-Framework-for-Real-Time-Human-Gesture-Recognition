@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - SignBridge</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .privacy-container { max-width: 800px; margin: 0 auto; padding: 40px 20px; }
+        .privacy-container h1 { font-size: 2rem; margin-bottom: 10px; }
+        .privacy-container h2 { font-size: 1.2rem; color: var(--accent); margin: 30px 0 10px; }
+        .privacy-container p { color: #aaa; line-height: 1.8; margin-bottom: 15px; font-size: 0.95rem; }
+        .privacy-container ul { color: #aaa; line-height: 1.8; margin-bottom: 15px; padding-left: 20px; font-size: 0.95rem; }
+        .highlight-box { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 20px; margin: 20px 0; }
+        .highlight-box p { margin: 0; color: #ccc; }
+        .last-updated { color: #555; font-size: 0.85rem; margin-bottom: 30px; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html" class="logo">✋ SignBridge</a>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="detection.html">Live Detection</a></li>
+            <li><a href="learning.html">Learn Signs</a></li>
+        </ul>
+        <button id="themeToggle" onclick="toggleTheme()" style="background:var(--bg-tertiary);border:1px solid var(--border-color);color:var(--text-secondary);padding:6px 14px;border-radius:20px;cursor:pointer;font-size:0.85rem;transition:all 0.3s;">🌙 Dark</button>
+    </nav>
+
+    <div class="privacy-container">
+        <h1>Privacy <span style="color:var(--accent);">Policy</span></h1>
+        <p class="last-updated">Last updated: May 2026</p>
+
+        <div class="highlight-box">
+            <p>🔒 <strong style="color:var(--accent);">Key point:</strong> SignBridge never collects, stores, or transmits your actual video or images. We only collect numerical keypoint coordinates if you explicitly consent to contribute data.</p>
+        </div>
+
+        <h2>1. What We Collect</h2>
+        <p>SignBridge collects the following data only when you explicitly consent:</p>
+        <ul>
+            <li>Hand and body keypoint coordinates (1,662 numerical values per frame)</li>
+            <li>Gesture label (which sign was performed)</li>
+            <li>Confidence score of the detection</li>
+            <li>Timestamp of the contribution</li>
+        </ul>
+        <p>We do NOT collect:</p>
+        <ul>
+            <li>Video footage or images of any kind</li>
+            <li>Personal identification information</li>
+            <li>Location data</li>
+            <li>Device identifiers</li>
+        </ul>
+
+        <h2>2. How We Use Your Data</h2>
+        <p>Contributed keypoint data is used exclusively to improve the SignBridge gesture recognition model. Specifically:</p>
+        <ul>
+            <li>Training data to improve recognition accuracy</li>
+            <li>Research into sign language recognition technology</li>
+            <li>Academic evaluation of the SignBridge system</li>
+        </ul>
+
+        <h2>3. Your Consent</h2>
+        <p>Data contribution is entirely optional. When you use the SignBridge detection feature, a consent popup will appear after 30 seconds asking if you wish to contribute your keypoint data. You can:</p>
+        <ul>
+            <li>Accept — your keypoints will be saved to help improve the model</li>
+            <li>Decline — no data will be collected, all features remain fully functional</li>
+            <li>Change your preference anytime by clearing your browser local storage</li>
+        </ul>
+
+        <h2>4. Data Security</h2>
+        <p>All contributed data is stored locally on the SignBridge server and is not shared with any third parties. Data is used solely for academic research and model improvement within the scope of this final year project.</p>
+
+        <h2>5. Data Retention</h2>
+        <p>Contributed data is retained for the duration of the academic project. You may request deletion of your contribution data by contacting the project administrator.</p>
+
+        <h2>6. Third Party Services</h2>
+        <p>SignBridge uses the following third party services:</p>
+        <ul>
+            <li>MyMemory Translation API — for text translation (no personal data is shared)</li>
+            <li>Google MediaPipe — runs locally on the server, no data is sent to Google</li>
+            <li>Web Speech API — runs locally in the browser for text-to-speech</li>
+        </ul>
+
+        <h2>7. Contact</h2>
+        <p>For any privacy concerns or data deletion requests, please contact:</p>
+        <p style="color:var(--accent);">Kannangara K Kannangara<br>BSc (Hons) Computer Science<br>Plymouth University — PUSL3190</p>
+
+        <div style="margin-top:40px;padding-top:20px;border-top:1px solid #2a2a2a;">
+            <a href="index.html" class="btn btn-primary">← Back to Home</a>
+        </div>
+    </div>
+
+    <footer>
+        <p>SignBridge — PUSL3190 Final Year Project | Kannangara K Kannangara | Plymouth University</p>
+        <p style="margin-top:8px;font-size:0.8rem;">
+            <a href="api-docs.html" style="color:var(--accent);">API Documentation</a> &nbsp;·&nbsp;
+            <a href="privacy.html" style="color:#888;">Privacy Policy</a> &nbsp;·&nbsp;
+            <a href="get-api-key.html" style="color:#888;">Get API Key</a>
+        </p>
+    </footer>
+
+    <script src="js/main.js"></script>
+<script>
+function toggleTheme() {
+    const body = document.body;
+    const btn = document.getElementById('themeToggle');
+    if (body.classList.contains('light-mode')) {
+        body.classList.remove('light-mode');
+        localStorage.setItem('theme', 'dark');
+        if (btn) btn.textContent = '🌙 Dark';
+    } else {
+        body.classList.add('light-mode');
+        localStorage.setItem('theme', 'light');
+        if (btn) btn.textContent = '☀️ Light';
+    }
+}
+(function() {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'light') {
+        document.body.classList.add('light-mode');
+        const btn = document.getElementById('themeToggle');
+        if (btn) btn.textContent = '☀️ Light';
+    }
+})();
+</script>
+</body>
+</html>

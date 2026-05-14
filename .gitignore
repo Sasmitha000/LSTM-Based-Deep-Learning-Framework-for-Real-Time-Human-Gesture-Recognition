@@ -1,0 +1,32 @@
+# Sensitive data - never commit these
+backend/signbridge.db
+backend/analytics.json
+backend/contributions_thanks.json
+backend/contributions_i_love_you.json
+backend/models_meta.json
+backend/api_keys.json
+backend/model/action_backup.keras
+backend/model/action_new.keras
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.env
+venv/
+*.egg-info/
+
+# macOS
+.DS_Store
+.AppleDouble
+
+# Logs
+*.log
+Logs/
+
+# Large model files
+backend/model/action_v2.keras
+backend/model/action_v3.keras
+
+# Node
+node_modules/
