@@ -3,7 +3,7 @@ flask-socketio==5.3.6
 flask-cors==4.0.1
 opencv-python-headless==4.8.1.78
 mediapipe==0.10.14
-tensorflow-cpu==2.15.0
+tensorflow-cpu==2.17.0
 numpy==1.26.4
 scikit-learn==1.5.1
 bcrypt==3.2.0
