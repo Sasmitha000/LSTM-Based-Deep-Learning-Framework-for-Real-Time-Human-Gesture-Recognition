@@ -16,6 +16,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-EXPOSE $PORT
-
-CMD ["sh", "-c", "gunicorn --worker-class eventlet -w 1 --bind 0.0.0.0:$PORT app:app"]
+CMD gunicorn --worker-class eventlet -w 1 --bind 0.0.0.0:${PORT:-5001} app:app
