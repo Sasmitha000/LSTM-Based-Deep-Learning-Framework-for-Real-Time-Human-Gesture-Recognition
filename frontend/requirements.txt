@@ -1,0 +1,1 @@
+# No Python dependencies required - serving static HTML/CSS/JS
