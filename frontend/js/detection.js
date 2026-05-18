@@ -1,4 +1,4 @@
-const BACKEND_URL = 'http://localhost:5001';
+const BACKEND_URL = 'https://lstm-based-deep-learning-framework-for-real-time-production.up.railway.app';
 const socket = io(BACKEND_URL);
 
 let video;

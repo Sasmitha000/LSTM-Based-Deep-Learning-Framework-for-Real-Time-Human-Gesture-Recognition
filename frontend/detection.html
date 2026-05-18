@@ -281,7 +281,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function loadActiveModel() {
     try {
-        const res = await fetch('http://localhost:5001/api/admin/models', {
+        const res = await fetch('https://lstm-based-deep-learning-framework-for-real-time-production.up.railway.app/api/admin/models', {
             headers: { 'X-Admin-Key': 'signbridge2024' }
         });
         const models = await res.json();
